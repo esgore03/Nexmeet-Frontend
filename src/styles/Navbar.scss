@@ -1,0 +1,120 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(20px);
+    font-weight: 500;
+    transition: background-color 0.3s;
+
+    &.dark {
+        background: rgba(17, 17, 17, 0.7);
+        color: white;
+    }
+
+    &.light {
+        background: white;
+        color: #555;
+    }
+}
+
+.navbar-logo {
+    height: 40px;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    transition: all 0.3s ease;
+
+    button {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font: inherit;
+
+        &:hover {
+            border-bottom: 1px solid currentColor;
+        }
+    }
+
+    /* Móvil cerrado */
+    @media (max-width: 640px) {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        min-height: 100vh;
+        background: #5044e5;
+        color: white;
+        flex-direction: column;
+        padding-top: 80px;
+        width: 0;
+        overflow: hidden;
+
+        &.open {
+            width: 240px;
+            padding-left: 40px;
+        }
+
+        button {
+            font-size: 18px;
+        }
+    }
+}
+
+.close-icon {
+    width: 20px;
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    cursor: pointer;
+
+    @media (min-width: 640px) {
+        display: none;
+    }
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    @media (max-width: 640px) {
+        gap: 8px;
+    }
+}
+
+.menu-icon {
+    width: 32px;
+    cursor: pointer;
+
+    @media (min-width: 640px) {
+        display: none;
+    }
+}
+
+.explore-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    background: #5044e5;
+    color: white;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 640px) {
+        display: none;
+    }
+}
