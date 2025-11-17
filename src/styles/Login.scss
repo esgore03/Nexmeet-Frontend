@@ -46,6 +46,15 @@ a:focus-visible,
 }
 // =====================================================
 
+// ✅ Eliminar scroll para esta página
+html,
+body {
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
 .app-container {
     flex: 1 1 auto;
     display: flex;
@@ -54,11 +63,13 @@ a:focus-visible,
     font-family: "Poppins", sans-serif;
     color: $color-text;
     background-color: $color-bg;
-    min-height: 100vh;
-    padding-top: 80px;
+    height: 100vh; // ✅ Altura fija
+    overflow: hidden; // ✅ Sin scroll
+    padding: 0;
+    margin: 0;
 
     @media (max-width: 768px) {
-        padding-top: 100px;
+        padding: 0 1rem;
     }
 }
 
@@ -277,10 +288,21 @@ a:focus-visible,
     align-items: center;
     justify-content: space-between;
     padding-left: 40px;
+    height: 70px; // ✅ Altura fija
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+        height: 60px;
+        padding: 15px 20px;
+    }
 }
 
 .topbar-logo {
     height: 40px;
+
+    @media (max-width: 768px) {
+        height: 35px;
+    }
 }
 
 .topbar-logo-link {
@@ -302,10 +324,30 @@ a:focus-visible,
     color: #ffffff;
     text-transform: uppercase;
     padding-top: 6px;
+
+    @media (max-width: 768px) {
+        font-size: 20px;
+    }
 }
+
 button,
 button:focus,
 button:focus-visible {
     outline: none;
     box-shadow: none;
+}
+
+// ✅ Mensaje de error adaptado
+.error-message {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
 }
