@@ -14,6 +14,15 @@ import facebook from "../assets/facebook.webp";
 import github from "../assets/github.png";
 import google from "../assets/google.png";
 import logo from "../assets/logo.png";
+import { signInWithPopup } from "firebase/auth";
+import {
+  auth,
+  googleProvider,
+  facebookProvider,
+  githubProvider,
+} from "../config/firebase";
+import { httpClient } from "../utils/httpClient";
+import { API_ENDPOINTS } from "../utils/constants";
 
 /**
  * Displays a temporary popup message for successful actions.
@@ -100,7 +109,47 @@ const Register: React.FC = () => {
       setLoading(false);
     }
   };
+  const handleSocialRegister = async (provider: any) => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const token = await user.getIdToken();
 
+      localStorage.setItem("authToken", token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: user.uid,
+          email: user.email,
+          name: user.displayName,
+          photoURL: user.photoURL,
+        }),
+      );
+
+      await httpClient.post(API_ENDPOINTS.REGISTER, {
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        age: 25,
+      });
+
+      showSuccess("¡Registro exitoso! Redirigiendo...");
+      setTimeout(() => {
+        window.location.href = "/home";
+      }, 1500);
+    } catch (error: any) {
+      console.error("Error en registro social:", error);
+
+      if (error?.code === "auth/account-exists-with-different-credential") {
+        alert(
+          "Ya existe una cuenta registrada con otro método (por ejemplo, Google). Usa ese método para continuar.",
+        );
+        return;
+      }
+
+      alert("Hubo un error al registrarte con el proveedor.");
+    }
+  };
   return (
     <>
       <div className="hero-topbar">
@@ -268,27 +317,39 @@ const Register: React.FC = () => {
 
                 {/* Redes sociales */}
                 <div className="social-media-container">
-                  <a href="#" className="social-link">
+                  <button
+                    type="button"
+                    className="social-link"
+                    onClick={() => handleSocialRegister(googleProvider)}
+                  >
                     <img
                       src={google}
                       className="social-logo"
                       alt="Google Logo"
                     />
-                  </a>
-                  <a href="#" className="social-link">
+                  </button>
+                  <button
+                    type="button"
+                    className="social-link"
+                    onClick={() => handleSocialRegister(facebookProvider)}
+                  >
                     <img
                       src={facebook}
                       className="social-logo"
                       alt="Facebook Logo"
                     />
-                  </a>
-                  <a href="#" className="social-link">
+                  </button>
+                  <button
+                    type="button"
+                    className="social-link"
+                    onClick={() => handleSocialRegister(githubProvider)}
+                  >
                     <img
                       src={github}
                       className="social-logo"
                       alt="Github Logo"
                     />
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
