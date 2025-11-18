@@ -8,6 +8,7 @@ const Hero: React.FC = () => {
 
   const handleLoginClick = () => navigate("/login");
   const handleSignUpClick = () => navigate("/register");
+  const handleAboutClick = () => navigate("/about"); 
 
   return (
     <section className="hero">
@@ -21,6 +22,14 @@ const Hero: React.FC = () => {
         </a>
 
         <div className="topbar-buttons">
+          
+          <button
+            onClick={handleAboutClick}
+            className="topbar-button about-button"
+          >
+            Sobre nosotros
+          </button>
+
           <button
             onClick={handleLoginClick}
             className="topbar-button login-button"

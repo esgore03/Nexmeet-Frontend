@@ -4,6 +4,10 @@ import Landing from "./views/landing";
 import Login from "./views/login";
 import Register from "./views/register";
 import Meeting from "./views/meeting";
+import RecoverPassword from "./views/RecoverPassword";
+import Profile from "./views/Profile"; 
+import Dashboard from "./views/Dashboard"; 
+import AboutUs from "./views/AboutUs";
 
 const App: React.FC = () => {
   const [theme, setTheme] = useState<string>(() => {
@@ -46,10 +50,23 @@ const App: React.FC = () => {
     <BrowserRouter>
       <div className="min-h-screen relative">
         <Routes>
+          {/* Páginas públicas */}
           <Route path="/" element={<Landing theme={theme} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Dashboard */}
+          <Route path="/dashboard" element={<Dashboard />} />  {/* 👈 NUEVA RUTA */}
+
+          {/* Reuniones */}
           <Route path="/meeting" element={<Meeting />} />
+
+          {/* Perfil */}
+          <Route path="/recover-password" element={<RecoverPassword />} />
+          <Route path="/perfil" element={<Profile />} />
+
+          {/* Sobre nosotros */}
+          <Route path="/about" element={<AboutUs />} />
         </Routes>
       </div>
     </BrowserRouter>

@@ -351,3 +351,17 @@ button:focus-visible {
     box-sizing: border-box;
     text-align: left;
 }
+
+.forgot-password {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #2f61ff;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  transition: 0.2s;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
