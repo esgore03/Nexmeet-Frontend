@@ -25,6 +25,8 @@ export const API_ENDPOINTS = {
   REGISTER: "/users/register",
   FORGOT_PASSWORD: "/auth/forgot-password",
   LOGOUT: "/logout",
+  PROFILE: "/users/me",
+  UPDATE_PROFILE: "/users/update",
 };
 
 /**
@@ -38,3 +40,4 @@ export const APP_CONFIG = {
   APP_NAME: "Nexmeet",
   DEFAULT_LANGUAGE: "es",
 };
+

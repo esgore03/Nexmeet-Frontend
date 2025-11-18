@@ -183,6 +183,10 @@ const Login: React.FC = () => {
               >
                 {loading ? "Loading..." : "Iniciar sesión"}
               </button>
+               
+               <Link to="/recover-password" className="forgot-password">
+        ¿Olvidaste tu contraseña?
+    </Link>
               {formError && (
                 <div
                   className="error-message"
@@ -194,10 +198,6 @@ const Login: React.FC = () => {
                 </div>
               )}
             </form>
-
-            <a href="/forgot-password" className="forgot">
-              ¿Olvidaste tu contraseña?
-            </a>
 
             <p className="register-text">
               ¿No tienes cuenta?{" "}
