@@ -1,0 +1,367 @@
+@use "sass:color";
+
+// ======== 🎨 Tema oscuro =========
+$color-bg: #0d0d0f;
+$color-box: #1a1a1d;
+$color-input: #2a2a2e;
+$color-input-text: #e5e5e5;
+$color-label: #eaeaea;
+$color-text: #ffffff;
+$color-accent: #3b82f6;
+$color-button: #3b82f6;
+// =================================
+
+// Focus Visible - WCAG (AA)
+*:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+input:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+button:focus-visible,
+.button:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.back-arrow-login:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+a:focus-visible,
+.forgot:focus-visible,
+.register-link:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+// =====================================================
+
+// ✅ Eliminar scroll para esta página
+html,
+body {
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.app-container {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Poppins", sans-serif;
+    color: $color-text;
+    background-color: $color-bg;
+    height: 100vh; // ✅ Altura fija
+    overflow: hidden; // ✅ Sin scroll
+    padding: 0;
+    margin: 0;
+
+    @media (max-width: 768px) {
+        padding: 0 1rem;
+    }
+}
+
+.login-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    padding: 0 20px;
+}
+
+.back-arrow-login {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: -160px;
+    font-size: 2.5rem;
+    color: #fff;
+    background: #1a1a1d;
+    border-radius: 50%;
+    width: 3.8rem;
+    height: 3.8rem;
+    line-height: 3rem;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition:
+        background 0.2s,
+        color 0.2s,
+        box-shadow 0.2s;
+    z-index: 10;
+
+    &:hover {
+        background: #2a2a2e;
+        color: #e5e5e5;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        left: 10px;
+        top: -70px;
+    }
+}
+
+.login-box {
+    background-color: $color-box;
+    border-radius: 20px;
+    padding: 2rem 2rem;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+
+    h2 {
+        margin-bottom: 0.5rem;
+        color: $color-text;
+    }
+
+    p {
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        color: #a0a0a0;
+    }
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+
+    label {
+        font-weight: 600;
+        margin-top: 0.5rem;
+        margin-bottom: 0.3rem;
+        font-size: 0.9rem;
+        color: $color-label !important;
+    }
+
+    .input {
+        background-color: $color-input !important;
+        color: $color-input-text;
+        border: none;
+        border-radius: 10px;
+        padding: 0.8rem;
+        font-size: 0.9rem;
+        outline: none;
+        margin-bottom: 1rem;
+
+        &::placeholder {
+            color: #888;
+        }
+
+        &:focus {
+            background-color: #333;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    }
+
+    .button {
+        background-color: $color-button;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.8rem;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        transition:
+            background-color 0.2s ease,
+            transform 0.1s;
+
+        &:hover:not(:disabled) {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.forgot {
+    display: block;
+    margin-top: 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: #a0a0a0;
+
+    &:hover {
+        color: #e5e5e5;
+        text-decoration: underline;
+    }
+}
+
+.register-text {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #a0a0a0;
+
+    .register-link {
+        font-weight: 600;
+        text-decoration: none;
+        color: $color-accent;
+
+        &:hover {
+            color: lighten($color-accent, 10%);
+            text-decoration: underline;
+        }
+    }
+}
+
+.social-media-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+
+    .social-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+
+        &:hover {
+            transform: scale(1.1);
+        }
+    }
+
+    .social-logo {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        filter: brightness(0.9);
+    }
+}
+
+@media (max-width: 768px) {
+    .login-box {
+        width: 95%;
+        padding: 1.5rem;
+    }
+
+    .social-media-container {
+        gap: 15px;
+
+        .social-logo {
+            width: 35px;
+            height: 35px;
+        }
+    }
+}
+
+.hero-topbar {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    padding: 20px;
+    backdrop-filter: blur(20px);
+    background: rgba(20, 20, 20, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 40px;
+    height: 70px; // ✅ Altura fija
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+        height: 60px;
+        padding: 15px 20px;
+    }
+}
+
+.topbar-logo {
+    height: 40px;
+
+    @media (max-width: 768px) {
+        height: 35px;
+    }
+}
+
+.topbar-logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.hero-topbar a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    gap: 15px;
+}
+
+.topbar-logo-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    padding-top: 6px;
+
+    @media (max-width: 768px) {
+        font-size: 20px;
+    }
+}
+
+button,
+button:focus,
+button:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+// ✅ Mensaje de error adaptado
+.error-message {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.forgot-password {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #2f61ff;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  transition: 0.2s;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

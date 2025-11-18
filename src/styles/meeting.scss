@@ -1,0 +1,459 @@
+.video-call {
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #0d0d0f 0%, #1a1a1d 100%);
+    position: relative;
+    overflow: hidden;
+
+    .video-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        h1 {
+            color: #ffffff;
+            font-size: 3rem;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+        }
+    }
+
+    .bottom-controls {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+        z-index: 10;
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+
+            &:focus {
+                outline: 3px solid #4a9eff;
+                outline-offset: 4px;
+            }
+
+            &:focus-visible {
+                outline: 3px solid #4a9eff;
+                outline-offset: 4px;
+                box-shadow: 0 0 0 8px rgba(74, 158, 255, 0.3);
+            }
+
+            &:focus:not(:focus-visible) {
+                outline: none;
+            }
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.2);
+                transform: scale(1.1);
+            }
+
+            &:active {
+                transform: scale(0.95);
+            }
+
+            &.disabled {
+                background: rgba(255, 0, 0, 0.3);
+
+                &:focus-visible {
+                    outline-color: #ff6b6b;
+                    box-shadow: 0 0 0 8px rgba(255, 107, 107, 0.3);
+                }
+            }
+
+            &.end-call {
+                background: rgba(255, 255, 255, 0.1);
+
+                &:hover {
+                    background: rgba(220, 53, 69, 1);
+                }
+
+                &:focus-visible {
+                    outline: 3px solid #ff4d4d;
+                    outline-offset: 4px;
+                    box-shadow: 0 0 0 8px rgba(220, 53, 69, 0.4);
+                }
+            }
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                pointer-events: none;
+            }
+        }
+    }
+
+    .side-controls {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 10;
+
+        .side-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+
+            &:focus {
+                outline: 3px solid #4a9eff;
+                outline-offset: 3px;
+            }
+
+            &:focus-visible {
+                outline: 3px solid #4a9eff;
+                outline-offset: 3px;
+                box-shadow: 0 0 0 6px rgba(74, 158, 255, 0.3);
+            }
+
+            &:focus:not(:focus-visible) {
+                outline: none;
+            }
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.2);
+                transform: scale(1.1);
+            }
+
+            &:active {
+                transform: scale(0.95);
+            }
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                pointer-events: none;
+            }
+        }
+    }
+
+    .chat-panel {
+        position: absolute;
+        right: -400px;
+        top: 0;
+        width: 400px;
+        height: 100%;
+        background: rgba(26, 26, 29, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+        transition: right 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        z-index: 20;
+
+        &.open {
+            right: 0;
+        }
+
+        .panel-header {
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.3);
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            h3 {
+                margin: 0;
+                font-size: 1.5rem;
+            }
+
+            .close-btn {
+                background: transparent;
+                border: none;
+                color: #ffffff;
+                font-size: 2rem;
+                cursor: pointer;
+                line-height: 1;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+
+                &:focus {
+                    outline: 2px solid #4a9eff;
+                    outline-offset: 2px;
+                }
+
+                &:focus-visible {
+                    outline: 2px solid #4a9eff;
+                    outline-offset: 2px;
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                &:focus:not(:focus-visible) {
+                    outline: none;
+                }
+
+                &:hover {
+                    opacity: 0.7;
+                    background: rgba(255, 255, 255, 0.1);
+                }
+            }
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+
+            &::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: rgba(59, 130, 246, 0.5);
+                border-radius: 4px;
+
+                &:hover {
+                    background: rgba(59, 130, 246, 0.7);
+                }
+            }
+
+            .no-messages {
+                color: #999;
+                text-align: center;
+                margin-top: 20px;
+            }
+
+            .message {
+                background: rgba(59, 130, 246, 0.15);
+                padding: 10px 15px;
+                border-radius: 10px;
+                max-width: 80%;
+                align-self: flex-start;
+
+                .message-text {
+                    color: #e5e5e5;
+                    word-wrap: break-word;
+                }
+            }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+            .chat-input {
+                flex: 1;
+                padding: 10px 15px;
+                border: 2px solid #444;
+                border-radius: 25px;
+                font-size: 1rem;
+                background: #2a2a2e;
+                color: #e5e5e5;
+                transition: all 0.2s ease;
+
+                &::placeholder {
+                    color: #888;
+                }
+
+                &:focus {
+                    outline: none;
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+                }
+
+                &:focus-visible {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+                }
+            }
+
+            .send-btn {
+                padding: 10px 20px;
+                background: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.3s ease;
+
+                &:focus {
+                    outline: 3px solid #60a5fa;
+                    outline-offset: 2px;
+                }
+
+                &:focus-visible {
+                    outline: 3px solid #60a5fa;
+                    outline-offset: 2px;
+                    box-shadow: 0 0 0 6px rgba(96, 165, 250, 0.3);
+                }
+
+                &:focus:not(:focus-visible) {
+                    outline: none;
+                }
+
+                &:hover {
+                    background: #2563eb;
+                    transform: translateY(-1px);
+                }
+
+                &:active {
+                    transform: translateY(0);
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            }
+        }
+    }
+
+    .participants-panel {
+        position: absolute;
+        right: -400px;
+        top: 0;
+        width: 400px;
+        height: 100%;
+        background: rgba(26, 26, 29, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+        transition: right 0.3s ease;
+        z-index: 20;
+
+        &.open {
+            right: 0;
+        }
+
+        .panel-header {
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.3);
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            h3 {
+                margin: 0;
+                font-size: 1.5rem;
+            }
+
+            .close-btn {
+                background: transparent;
+                border: none;
+                color: #ffffff;
+                font-size: 2rem;
+                cursor: pointer;
+                line-height: 1;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+
+                &:focus {
+                    outline: 2px solid #4a9eff;
+                    outline-offset: 2px;
+                }
+
+                &:focus-visible {
+                    outline: 2px solid #4a9eff;
+                    outline-offset: 2px;
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                &:focus:not(:focus-visible) {
+                    outline: none;
+                }
+
+                &:hover {
+                    opacity: 0.7;
+                    background: rgba(255, 255, 255, 0.1);
+                }
+            }
+        }
+
+        .participants-content {
+            padding: 20px;
+
+            p {
+                font-size: 1.2rem;
+                color: #e5e5e5;
+                margin-bottom: 15px;
+            }
+
+            .participants-list {
+                list-style: none;
+                padding: 0;
+
+                li {
+                    padding: 15px;
+                    background: rgba(59, 130, 246, 0.15);
+                    margin-bottom: 10px;
+                    border-radius: 8px;
+                    color: #f5f5f5;
+                    font-weight: 500;
+                    transition: all 0.2s ease;
+                    border: 2px solid transparent;
+
+                    &:hover {
+                        background: rgba(59, 130, 246, 0.25);
+                    }
+
+                    &:focus {
+                        outline: 2px solid #4a9eff;
+                        outline-offset: 2px;
+                        border-color: #4a9eff;
+                    }
+                }
+            }
+        }
+    }
+}
+
+*:focus {
+    scroll-margin-top: 100px;
+    scroll-margin-bottom: 100px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .video-call {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}

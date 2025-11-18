@@ -1,0 +1,125 @@
+button,
+button:focus,
+button:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.navbar {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    padding: 8px 20px;
+    backdrop-filter: blur(20px);
+    font-weight: 500;
+    transition: background-color 0.3s;
+    padding-bottom: 20px;
+    padding-top: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between; // ← distribuye perfecto
+
+    &.dark {
+        background: rgba(17, 17, 17, 0.7);
+    }
+
+    &.light {
+        background: white;
+    }
+}
+
+.navbar-links {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+}
+
+.navbar-logo {
+    height: 40px;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    align-items: center;
+
+    button {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font: inherit;
+    }
+
+    /* SOLO móvil */
+    @media (max-width: 640px) {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        min-height: 100vh;
+        background: #5044e5;
+        color: white;
+        flex-direction: column;
+        padding-top: 80px;
+        width: 0;
+        overflow: hidden;
+
+        &.open {
+            width: 240px;
+            padding-left: 40px;
+        }
+
+        button {
+            font-size: 18px;
+        }
+    }
+}
+
+.close-icon {
+    width: 20px;
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    cursor: pointer;
+
+    @media (min-width: 640px) {
+        display: none;
+    }
+}
+
+.navbar-right {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    white-space: nowrap; // ← evita que los botones hagan wrap
+    padding-right: 38px;
+}
+.navbar-right button {
+    max-width: max-content;
+}
+
+.menu-icon {
+    width: 32px;
+    cursor: pointer;
+
+    @media (min-width: 640px) {
+        display: none;
+    }
+}
+
+#signUpButton {
+    background: #5044e5;
+}
+
+.navbar.light .navbar-links button {
+    color: black;
+}
+
+.navbar.dark .navbar-links button {
+    color: white;
+}
