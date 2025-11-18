@@ -1,12 +1,12 @@
 import "../styles/Dashboard.scss";
 import UserNavbar from "../components/UserNavbar";
-import hero1 from "../assets/hero1.jpeg";
+import hero2 from "../assets/hero2.jpeg";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleCrearReunion = () => navigate("/meeting/create");
+  const handleCrearReunion = () => navigate("/meeting");
 
   return (
     <section className="dashboard">
@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
 
         <div className="dashboard__image-wrapper">
           <img
-            src={hero1}
+            src={hero2}
             alt="Dashboard preview"
             className="dashboard__image"
           />

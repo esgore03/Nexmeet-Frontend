@@ -7,6 +7,7 @@ import Meeting from "./views/meeting";
 import RecoverPassword from "./views/RecoverPassword";
 import Profile from "./views/Profile"; 
 import Dashboard from "./views/Dashboard"; 
+import AboutUs from "./views/AboutUs";
 
 const App: React.FC = () => {
   const [theme, setTheme] = useState<string>(() => {
@@ -63,6 +64,9 @@ const App: React.FC = () => {
           {/* Perfil */}
           <Route path="/recover-password" element={<RecoverPassword />} />
           <Route path="/perfil" element={<Profile />} />
+
+          {/* Sobre nosotros */}
+          <Route path="/about" element={<AboutUs />} />
         </Routes>
       </div>
     </BrowserRouter>

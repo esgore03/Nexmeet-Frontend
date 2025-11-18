@@ -5,8 +5,10 @@ import end_call from "../assets/end_call.webp";
 import micro from "../assets/micro.png";
 import camera from "../assets/camera.png";
 import "../styles/meeting.scss";
+import { useNavigate } from "react-router-dom";
 
 const Meeting: React.FC = () => {
+  const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
@@ -23,6 +25,7 @@ const Meeting: React.FC = () => {
 
   const handleEndCall = () => {
     console.log("Llamada finalizada");
+     navigate("/dashboard");
     // Lógica para finalizar la llamada
   };
 
