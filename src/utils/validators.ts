@@ -7,6 +7,10 @@
  * @param {string | number} age - The age to validate.
  * @returns {string | null} Returns an error message if invalid, or null if valid.
  */
+/**
+ * Validation helpers for forms (JSDoc in English).
+ */
+
 export const validateAge = (age: string | number): string | null => {
   if (age === undefined || age === null || age === "")
     return "La edad es requerida";
@@ -17,11 +21,6 @@ export const validateAge = (age: string | number): string | null => {
   return null;
 };
 
-/**
- * Validates an email address.
- * @param {string} email - The email to validate.
- * @returns {string | null} Returns an error message if invalid, or null if valid.
- */
 export const validateEmail = (email: string): string | null => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -36,11 +35,6 @@ export const validateEmail = (email: string): string | null => {
   return null;
 };
 
-/**
- * Validates a password according to defined security rules.
- * @param {string} password - The password to validate.
- * @returns {string | null} Returns an error message if invalid, or null if valid.
- */
 export const validatePassword = (password: string): string | null => {
   if (!password) {
     return "La contraseña es requerida";
@@ -51,29 +45,35 @@ export const validatePassword = (password: string): string | null => {
   if (password.length < 8) {
     return "La contraseña debe tener al menos 8 caracteres";
   }
+  if (!/[A-Z]/.test(password)) {
+    return "La contraseña debe contener al menos una letra mayúscula";
+  }
   if (!/[0-9]/.test(password)) {
     return "La contraseña debe contener al menos un número";
   }
-  // Allowed special characters (excluding ' " ; \ /)
-  const specialCharRegex = /[!@#$%^&*(),.?\:{}|<>\[\]\-_+=~`]/;
-  if (!specialCharRegex.test(password)) {
+
+  // Validar caracteres especiales permitidos
+  const specialChars = "!@#$%^&*(),.?:{}|<>[]_-+=~`";
+  const hasSpecialChar = password
+    .split("")
+    .some((char) => specialChars.includes(char));
+
+  if (!hasSpecialChar) {
     return "La contraseña debe contener al menos un caracter especial";
   }
-  if (/[\/'"`;\\]/g.test(password)) {
+
+  // Validar caracteres NO permitidos
+  const forbiddenChars = /[\/'"`;\\]/g;
+  if (forbiddenChars.test(password)) {
     return "La contraseña no puede contener comillas, punto y coma, barra o contrabarra";
   }
+
   return null;
 };
 
-/**
- * Validates that the password confirmation matches the password.
- * @param {string} password - The original password.
- * @param {string} confirmPassword - The confirmation password.
- * @returns {string | null} Returns an error message if invalid, or null if valid.
- */
 export const validatePasswordConfirmation = (
   password: string,
-  confirmPassword: string
+  confirmPassword: string,
 ): string | null => {
   if (!confirmPassword) {
     return "Debes confirmar la contraseña";
@@ -86,11 +86,6 @@ export const validatePasswordConfirmation = (
   return null;
 };
 
-/**
- * Validates a user's name.
- * @param {string} name - The name to validate.
- * @returns {string | null} Returns an error message if invalid, or null if valid.
- */
 export const validateName = (name: string): string | null => {
   if (!name) return "El nombre es requerido";
   if (name.length < 2) return "El nombre debe tener al menos 2 caracteres";
@@ -98,21 +93,13 @@ export const validateName = (name: string): string | null => {
   return null;
 };
 
-/**
- * Login form data type.
- */
 export type LoginFormData = {
   email: string;
   password: string;
 };
 
-/**
- * Validates the login form fields.
- * @param {LoginFormData} formData - The login form data.
- * @returns {{ isValid: boolean; errors: Record<string,string> }} Validation result and error messages.
- */
 export const validateLoginForm = (
-  formData: LoginFormData
+  formData: LoginFormData,
 ): { isValid: boolean; errors: Record<string, string> } => {
   const errors: { [key: string]: string } = {};
 
@@ -128,9 +115,6 @@ export const validateLoginForm = (
   };
 };
 
-/**
- * Register form data type.
- */
 export type RegisterFormData = {
   name: string;
   email: string;
@@ -139,13 +123,8 @@ export type RegisterFormData = {
   confirmPassword: string;
 };
 
-/**
- * Validates the registration form fields.
- * @param {RegisterFormData} formData - The registration form data.
- * @returns {{ isValid: boolean; errors: Record<string,string> }} Validation result and error messages.
- */
 export const validateRegisterForm = (
-  formData: RegisterFormData
+  formData: RegisterFormData,
 ): { isValid: boolean; errors: Record<string, string> } => {
   const errors: { [key: string]: string } = {};
 
@@ -163,7 +142,7 @@ export const validateRegisterForm = (
 
   const confirmPasswordError = validatePasswordConfirmation(
     formData.password,
-    formData.confirmPassword
+    formData.confirmPassword,
   );
   if (confirmPasswordError) errors.confirmPassword = confirmPasswordError;
 

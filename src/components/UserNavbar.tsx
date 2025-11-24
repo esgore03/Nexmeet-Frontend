@@ -15,8 +15,10 @@ const UserNavbar: React.FC = () => {
       <div className="user-navbar-links">
         <button onClick={() => navigate("/dashboard")}>Inicio</button>
         <button onClick={() => navigate("/meeting")}>Reuniones</button>
-        <button onClick={() => navigate("/meeting/create")}>Crear reunión</button>
-        <button onClick={() => navigate("/perfil")}>Perfil</button>
+        <button onClick={() => navigate("/meeting/create")}>
+          Crear reunión
+        </button>
+        <button onClick={() => navigate("/profile")}>Perfil</button>
         <button onClick={() => navigate("/login")}>Cerrar sesión</button>
       </div>
     </nav>

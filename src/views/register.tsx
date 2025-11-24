@@ -9,12 +9,11 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Register.scss";
 import { Link } from "react-router-dom";
 import { validateRegisterForm } from "../utils/validators";
-import { registerUser } from "../utils/authApi";
 import facebook from "../assets/facebook.webp";
 import github from "../assets/github.png";
 import google from "../assets/google.png";
 import logo from "../assets/logo.png";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth"; // ✅ Agregado
 import {
   auth,
   googleProvider,
@@ -91,28 +90,14 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      await registerUser({
-        name: formData.name,
-        email: formData.email,
-        age: Number(formData.age),
-        password: formData.password,
-      });
+      // 1️⃣ Crear usuario en Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password,
+      );
 
-      showSuccess("Registration successful! Redirecting to login...");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    } catch (error: any) {
-      const backendMsg = error?.data?.message || error?.message;
-      setFormError(backendMsg || "Error registering user");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleSocialRegister = async (provider: any) => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const user = userCredential.user;
       const token = await user.getIdToken();
 
       localStorage.setItem("authToken", token);
@@ -121,35 +106,106 @@ const Register: React.FC = () => {
         JSON.stringify({
           id: user.uid,
           email: user.email,
-          name: user.displayName,
-          photoURL: user.photoURL,
+          name: formData.name,
+          photoURL: null,
         }),
       );
 
       await httpClient.post(API_ENDPOINTS.REGISTER, {
-        name: user.displayName,
-        email: user.email,
+        name: formData.name,
+        age: Number(formData.age),
+        photoURL: null,
+      });
+
+      showSuccess("¡Registro exitoso! Redirigiendo...");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+
+      let errorMessage = "Error al registrar usuario";
+
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "Este email ya está registrado";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "La contraseña debe tener al menos 6 caracteres";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "El formato del email es inválido";
+      } else if (error.code === "auth/operation-not-allowed") {
+        errorMessage = "El registro con email/password no está habilitado";
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      setFormError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSocialRegister = async (provider: any) => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const token = await user.getIdToken();
+
+      // ✅ SOLUCIÓN: Obtener nombre con fallback
+      const userName =
+        user.displayName || user.email?.split("@")[0] || "Usuario"; // Fallback si todo falla
+
+      // 2️⃣ Guardar token y datos en localStorage
+      localStorage.setItem("authToken", token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: user.uid,
+          email: user.email,
+          name: userName, // ✅ Usar el nombre con fallback
+          photoURL: user.photoURL,
+        }),
+      );
+
+      // 3️⃣ Registrar en tu backend
+      await httpClient.post(API_ENDPOINTS.REGISTER, {
+        name: userName, // ✅ Usar el nombre con fallback
         photoURL: user.photoURL,
         age: 25,
       });
 
       showSuccess("¡Registro exitoso! Redirigiendo...");
       setTimeout(() => {
-        window.location.href = "/home";
+        navigate("/login");
       }, 1500);
     } catch (error: any) {
       console.error("Error en registro social:", error);
 
       if (error?.code === "auth/account-exists-with-different-credential") {
-        alert(
-          "Ya existe una cuenta registrada con otro método (por ejemplo, Google). Usa ese método para continuar.",
+        setFormError(
+          "Ya existe una cuenta con este email usando otro método de inicio de sesión. Por favor, usa ese método.",
         );
         return;
       }
 
-      alert("Hubo un error al registrarte con el proveedor.");
+      if (error?.code === "auth/popup-closed-by-user") {
+        setFormError("El proceso de registro fue cancelado");
+        return;
+      }
+
+      if (error?.code === "auth/cancelled-popup-request") {
+        return;
+      }
+
+      setFormError(
+        error?.data?.error || // ✅ Cambiar a error.data.error
+          error?.message ||
+          "Hubo un error al registrarte con el proveedor social.",
+      );
     }
   };
+
   return (
     <>
       <div className="hero-topbar">
@@ -283,7 +339,7 @@ const Register: React.FC = () => {
                     disabled={loading}
                     aria-label={loading ? "Registrando usuario" : "Registrarse"}
                   >
-                    {loading ? "Loading..." : "Registrarse"}
+                    {loading ? "Registrando..." : "Registrarse"}
                   </button>
 
                   {formError && (
@@ -321,6 +377,7 @@ const Register: React.FC = () => {
                     type="button"
                     className="social-link"
                     onClick={() => handleSocialRegister(googleProvider)}
+                    aria-label="Registrarse con Google"
                   >
                     <img
                       src={google}
@@ -332,6 +389,7 @@ const Register: React.FC = () => {
                     type="button"
                     className="social-link"
                     onClick={() => handleSocialRegister(facebookProvider)}
+                    aria-label="Registrarse con Facebook"
                   >
                     <img
                       src={facebook}
@@ -343,6 +401,7 @@ const Register: React.FC = () => {
                     type="button"
                     className="social-link"
                     onClick={() => handleSocialRegister(githubProvider)}
+                    aria-label="Registrarse con GitHub"
                   >
                     <img
                       src={github}

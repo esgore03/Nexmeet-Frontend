@@ -21,8 +21,8 @@ export const API_BASE_URL =
 
 export const API_ENDPOINTS = {
   // Autenticación
-  LOGIN: "/users/login",
-  REGISTER: "/users/register",
+  LOGIN: "/api/users/login",
+  REGISTER: "/api/users/register",
   FORGOT_PASSWORD: "/auth/forgot-password",
   LOGOUT: "/logout",
   PROFILE: "/users/me",
@@ -40,4 +40,3 @@ export const APP_CONFIG = {
   APP_NAME: "Nexmeet",
   DEFAULT_LANGUAGE: "es",
 };
-
