@@ -31,7 +31,7 @@ const Meeting: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const hasJoinedRef = useRef(false); // ✅ Evitar doble join en Strict Mode
+  const hasJoinedRef = useRef(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
@@ -42,6 +42,7 @@ const Meeting: React.FC = () => {
   const [participants, setParticipants] = useState<UserWithSocketId[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [error, setError] = useState("");
+  const [showToast, setShowToast] = useState(false); // ✅ Estado del toast
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -80,7 +81,6 @@ const Meeting: React.FC = () => {
       return;
     }
 
-    // ✅ Prevenir doble ejecución en React Strict Mode
     if (hasJoinedRef.current) {
       console.log("⚠️ Ya se ha unido a la reunión, evitando duplicado");
       return;
@@ -93,12 +93,10 @@ const Meeting: React.FC = () => {
     console.log(`🚪 Uniéndose a la reunión ${meetingId} con userId ${userId}`);
     socket.emit("newUser", userId, meetingId);
 
-    // ✅ Limpiar listeners anteriores antes de agregar nuevos
     socket.off("usersOnline");
     socket.off("newMessage");
     socket.off("socketServerError");
 
-    // Escuchar usuarios online
     socket.on(
       "usersOnline",
       (
@@ -123,11 +121,9 @@ const Meeting: React.FC = () => {
       },
     );
 
-    // Escuchar nuevos mensajes
     socket.on("newMessage", (msg: Message) => {
       console.log("💬 Nuevo mensaje recibido:", msg);
       setMessages((prev) => {
-        // ✅ Evitar duplicados comparando timestamp y userId
         const isDuplicate = prev.some(
           (m) =>
             m.timestamp === msg.timestamp &&
@@ -142,7 +138,6 @@ const Meeting: React.FC = () => {
       });
     });
 
-    // Escuchar errores
     socket.on(
       "socketServerError",
       (errorData: { origin: string; message: string }) => {
@@ -151,10 +146,9 @@ const Meeting: React.FC = () => {
       },
     );
 
-    // Cleanup al desmontar
     return () => {
       console.log("🧹 Limpiando componente Meeting");
-      hasJoinedRef.current = false; // ✅ Resetear flag
+      hasJoinedRef.current = false;
       socket.off("usersOnline");
       socket.off("newMessage");
       socket.off("socketServerError");
@@ -162,7 +156,6 @@ const Meeting: React.FC = () => {
     };
   }, [meetingId, navigate]);
 
-  // Auto-scroll al final de los mensajes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -207,24 +200,25 @@ const Meeting: React.FC = () => {
     }
   };
 
+  // ✅ Función mejorada para copiar ID
   const copyMeetingId = () => {
     if (meetingId) {
       navigator.clipboard.writeText(meetingId);
-      alert("ID de reunión copiado al portapapeles");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     }
   };
 
-  // ✅ Handlers separados para debugging
   const toggleChat = () => {
-    console.log("🗨️ Toggling chat. Estado actual:", isChatOpen);
+    console.log("Toggling chat. Estado actual:", isChatOpen);
     setIsChatOpen(!isChatOpen);
-    setIsParticipantsOpen(false); // ✅ Cerrar participantes al abrir chat
+    setIsParticipantsOpen(false);
   };
 
   const toggleParticipants = () => {
-    console.log("👥 Toggling participants. Estado actual:", isParticipantsOpen);
+    console.log("Toggling participants. Estado actual:", isParticipantsOpen);
     setIsParticipantsOpen(!isParticipantsOpen);
-    setIsChatOpen(false); // ✅ Cerrar chat al abrir participantes
+    setIsChatOpen(false);
   };
 
   return (
@@ -244,7 +238,16 @@ const Meeting: React.FC = () => {
         {error && <p className="error-message">{error}</p>}
       </div>
 
-      {/* Controles centrales inferiores */}
+      {/* ✅ Toast Notification */}
+      {showToast && (
+        <div className="toast-notification">
+          <div className="toast-content">
+            <span className="toast-icon">✓</span>
+            <span className="toast-text">ID copiado al portapapeles</span>
+          </div>
+        </div>
+      )}
+
       <div className="bottom-controls">
         <button
           className={`control-btn ${!isMicOn ? "disabled" : ""}`}
@@ -271,7 +274,6 @@ const Meeting: React.FC = () => {
         </button>
       </div>
 
-      {/* Botones esquina inferior derecha */}
       <div className="side-controls">
         <button
           className="side-btn"
@@ -289,7 +291,6 @@ const Meeting: React.FC = () => {
         </button>
       </div>
 
-      {/* Panel de Chat */}
       <div className={`chat-panel ${isChatOpen ? "open" : ""}`}>
         <div className="panel-header">
           <h3>Chat</h3>
@@ -343,7 +344,6 @@ const Meeting: React.FC = () => {
         </div>
       </div>
 
-      {/* Panel de Participantes */}
       <div className={`participants-panel ${isParticipantsOpen ? "open" : ""}`}>
         <div className="panel-header">
           <h3>Participantes ({participants.length})</h3>

@@ -67,7 +67,13 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-
+  /**
+   * Handles input value changes in the registration form.
+   * Updates the corresponding state field and clears any previous errors for that field.
+   *
+   * @function handleChange
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
 
@@ -75,7 +81,18 @@ const Register: React.FC = () => {
     setErrors(rest);
     setFormError(null);
   };
-
+  /**
+   * Handles registration form submission.
+   * Performs client-side validation, creates a user via Firebase Authentication,
+   * saves user information to localStorage, and registers them in the backend.
+   *
+   * Displays a success message and redirects to the login page on completion.
+   *
+   * @async
+   * @function handleSubmit
+   * @param {React.FormEvent} e - The form submission event.
+   * @returns {Promise<void>}
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -90,7 +107,6 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      // 1️⃣ Crear usuario en Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -145,7 +161,15 @@ const Register: React.FC = () => {
       setLoading(false);
     }
   };
-
+  /**
+   * Handles social registration using a Firebase Authentication provider (Google, Discord, or GitHub).
+   * Automatically registers the authenticated user on the backend.
+   *
+   * @async
+   * @function handleSocialRegister
+   * @param {any} provider - The Firebase OAuth provider instance to use for sign-in.
+   * @returns {Promise<void>}
+   */
   const handleSocialRegister = async (provider: any) => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -155,7 +179,6 @@ const Register: React.FC = () => {
       const userName =
         user.displayName || user.email?.split("@")[0] || "Usuario";
 
-      // 2️⃣ Guardar token y datos en localStorage
       localStorage.setItem("authToken", token);
       localStorage.setItem(
         "user",
@@ -167,7 +190,6 @@ const Register: React.FC = () => {
         }),
       );
 
-      // 3️⃣ Registrar en tu backend
       await httpClient.post(API_ENDPOINTS.REGISTER, {
         name: userName,
         photoURL: user.photoURL,
@@ -384,7 +406,7 @@ const Register: React.FC = () => {
                       alt="Google Logo"
                     />
                   </button>
-                  {/* ✅ Cambio aquí: Discord en lugar de Facebook */}
+
                   <button
                     type="button"
                     className="social-link"
