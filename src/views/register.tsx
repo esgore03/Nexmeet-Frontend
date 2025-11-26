@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Register.scss";
 import { Link } from "react-router-dom";
 import { validateRegisterForm } from "../utils/validators";
-import discord from "../assets/discord.png"; // ✅ Cambio aquí
+import discord from "../assets/discord.webp"; // ✅ Cambio aquí
 import github from "../assets/github.png";
 import google from "../assets/google.png";
 import logo from "../assets/logo.png";
