@@ -51,13 +51,16 @@ const EditProfile: React.FC = () => {
 
       console.log("Cargando datos del usuario:", userEmail);
 
-      // Obtener todos los usuarios
-      const response = await fetch("http://localhost:3000/api/users", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
+      // ✅ CAMBIO: Usar el backend correcto (puerto 9000)
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         setError("Error al cargar los datos");
@@ -182,8 +185,9 @@ const EditProfile: React.FC = () => {
 
       console.log("Actualizando usuario:", userId, updates);
 
+      // ✅ CAMBIO: Usar el backend correcto (puerto 9000)
       const response = await fetch(
-        `http://localhost:3000/api/users/update/${userId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/update/${userId}`,
         {
           method: "PUT",
           headers: {

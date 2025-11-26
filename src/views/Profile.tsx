@@ -45,13 +45,16 @@ const ViewProfile: React.FC = () => {
 
       console.log("Email del token:", userEmail);
 
-      // Obtener todos los usuarios
-      const response = await fetch("http://localhost:3000/api/users", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
+      // ✅ CAMBIO: Usar el backend correcto (puerto 9000)
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       console.log("Response status:", response.status);
 
@@ -84,9 +87,10 @@ const ViewProfile: React.FC = () => {
           photoURL: currentUser.photoURL || "",
         });
 
+        // ✅ IMPORTANTE: Guardar userId en localStorage
         localStorage.setItem("userId", currentUser.id);
+        console.log("✅ userId guardado en localStorage:", currentUser.id);
       } else {
-        // ⚠️ Usuario no encontrado en la BD
         console.error("Usuario no encontrado. Email buscado:", userEmail);
         setError("Debes completar tu perfil para continuar.");
       }
@@ -110,7 +114,6 @@ const ViewProfile: React.FC = () => {
         return;
       }
 
-      // Obtener datos del localStorage
       const userStr = localStorage.getItem("user");
       if (!userStr) {
         navigate("/login");
@@ -119,22 +122,24 @@ const ViewProfile: React.FC = () => {
 
       const user = JSON.parse(userStr);
 
-      // Registrar en el backend
-      const response = await fetch("http://localhost:3000/api/users/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      // ✅ CAMBIO: Usar el backend correcto
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: user.name || "Usuario",
+            age: 25,
+            photoURL: user.photoURL || null,
+          }),
         },
-        body: JSON.stringify({
-          name: user.name || "Usuario",
-          age: 25, // Edad por defecto, puedes pedirla al usuario
-          photoURL: user.photoURL || null,
-        }),
-      });
+      );
 
       if (response.ok) {
-        // Recargar la página para obtener los datos
         window.location.reload();
       } else {
         const data = await response.json();

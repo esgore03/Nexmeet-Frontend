@@ -59,7 +59,7 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />{" "}
           {/* 👈 NUEVA RUTA */}
           {/* Reuniones */}
-          <Route path="/meeting" element={<Meeting />} />
+          <Route path="/meeting/:meetingId" element={<Meeting />} />
           {/* Perfil */}
           <Route path="/recover-password" element={<RecoverPassword />} />
           <Route path="/profile" element={<ViewProfile />} />
