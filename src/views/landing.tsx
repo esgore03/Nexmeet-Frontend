@@ -1,9 +1,9 @@
 import Hero from "../components/Hero";
 
-const Landing = ({ theme }) => {
+const Landing = () => {
   return (
     <>
-      <Hero theme={theme} />
+      <Hero />
     </>
   );
 };

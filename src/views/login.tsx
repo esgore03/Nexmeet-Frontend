@@ -24,6 +24,7 @@ import {
 } from "../config/firebase";
 import { httpClient } from "../utils/httpClient";
 import { API_ENDPOINTS } from "../utils/constants";
+import { fetchSignInMethodsForEmail } from "firebase/auth";
 
 /**
  * Displays a temporary popup message for successful actions.
