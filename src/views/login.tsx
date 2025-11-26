@@ -3,20 +3,27 @@ import "../styles/Login.scss";
 import { Link } from "react-router-dom";
 import { validateLoginForm } from "../utils/validators";
 import logo from "../assets/logo.png";
-import discord from "../assets/discord.webp"; // ✅ Cambio aquí
+import discord from "../assets/discord.webp";
 import github from "../assets/github.png";
 import google from "../assets/google.png";
 import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import {
   auth,
   googleProvider,
-  discordProvider, // ✅ Cambio aquí
+  discordProvider,
   githubProvider,
 } from "../config/firebase";
 import { httpClient } from "../utils/httpClient";
 import { API_ENDPOINTS } from "../utils/constants";
 import { fetchSignInMethodsForEmail } from "firebase/auth";
-
+/**
+ * Displays a temporary popup success message on the screen.
+ *
+ * @function showSuccess
+ * @param {string} message - The message text to display.
+ * @example
+ * showSuccess("Login successful!");
+ */
 function showSuccess(message: string) {
   let popup = document.getElementById("popup-message");
   if (!popup) {
@@ -33,7 +40,16 @@ function showSuccess(message: string) {
     popup?.classList.remove("popup-show");
   }, 3000);
 }
-
+/**
+ * Login Page Component
+ *
+ * Allows users to log in via email/password or third-party providers (Google, Discord, GitHub).
+ * Integrates with Firebase Authentication and the custom backend API.
+ * Handles input validation, error messages, token storage, and redirects.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered login page with form and social login options.
+ */
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
@@ -41,13 +57,28 @@ const Login: React.FC = () => {
   );
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
+  /**
+   * Handles user input updates for email and password fields.
+   * Clears related validation and form-level errors.
+   *
+   * @function handleChange
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
     setErrors({ ...errors, [e.target.id]: undefined });
     setFormError(null);
   };
-
+  /**
+   * Handles login form submission.
+   * Validates inputs, authenticates via Firebase email/password,
+   * then fetches or initializes the user record in the backend.
+   *
+   * @async
+   * @function handleSubmit
+   * @param {React.FormEvent} e - Form submission event.
+   * @returns {Promise<void>}
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -86,7 +117,7 @@ const Login: React.FC = () => {
         );
       }
 
-      showSuccess("Login successful! Redirecting...");
+      showSuccess("Login exitoso! Redirigiendo...");
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 1500);
@@ -116,7 +147,16 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
-
+  /**
+   * Handles user login using external providers (Google, Discord, GitHub).
+   * Creates the user in the backend if they do not exist.
+   * Handles multiple authentication provider conflicts.
+   *
+   * @async
+   * @function handleSocialLogin
+   * @param {any} provider - The Firebase Authentication provider instance.
+   * @returns {Promise<void>}
+   */
   const handleSocialLogin = async (provider: any) => {
     try {
       const result = await signInWithPopup(auth, provider);

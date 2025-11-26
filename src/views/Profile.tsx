@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "../styles/Profile.scss";
 import UserNavbar from "../components/UserNavbar";
 
+/**
+ * ViewProfile Component
+ * Displays and manages user profile information
+ * @returns {React.FC} Profile view component
+ */
 const ViewProfile: React.FC = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState({
@@ -15,10 +20,18 @@ const ViewProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Ref for focus management
+  const editButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     fetchUserData();
   }, []);
 
+  /**
+   * Fetches user data from the backend API
+   * Decodes JWT token to get user email and retrieves full user profile
+   * @async
+   */
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem("authToken");
@@ -30,7 +43,7 @@ const ViewProfile: React.FC = () => {
         return;
       }
 
-      // Decodificar el token para obtener el email
+      // Decode JWT token to get user email
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       const jsonPayload = decodeURIComponent(
@@ -45,7 +58,7 @@ const ViewProfile: React.FC = () => {
 
       console.log("Email del token:", userEmail);
 
-      // ✅ CAMBIO: Usar el backend correcto (puerto 9000)
+      // Fetch all users from backend
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/users`,
         {
@@ -67,13 +80,13 @@ const ViewProfile: React.FC = () => {
       const data = await response.json();
       console.log("Todos los usuarios:", data);
 
-      // 🔍 DEBUG: Ver los emails de todos los usuarios
+      // Debug: Log all user emails
       console.log(
         "Emails en BD:",
         data.users.map((u: any) => u.email),
       );
 
-      // Buscar el usuario actual por email
+      // Find current user by email
       const currentUser = data.users.find((u: any) => u.email === userEmail);
 
       console.log("Usuario actual encontrado:", currentUser);
@@ -87,7 +100,7 @@ const ViewProfile: React.FC = () => {
           photoURL: currentUser.photoURL || "",
         });
 
-        // ✅ IMPORTANTE: Guardar userId en localStorage
+        // Save userId in localStorage for future use
         localStorage.setItem("userId", currentUser.id);
         console.log("✅ userId guardado en localStorage:", currentUser.id);
       } else {
@@ -102,10 +115,17 @@ const ViewProfile: React.FC = () => {
     }
   };
 
+  /**
+   * Navigates to the profile edit page
+   */
   const handleEditClick = () => {
     navigate("/edit");
   };
 
+  /**
+   * Automatically completes user profile with default values
+   * @async
+   */
   const handleCompleteProfile = async () => {
     try {
       const token = localStorage.getItem("authToken");
@@ -122,7 +142,7 @@ const ViewProfile: React.FC = () => {
 
       const user = JSON.parse(userStr);
 
-      // ✅ CAMBIO: Usar el backend correcto
+      // Register user with default profile data
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/register`,
         {
@@ -151,34 +171,81 @@ const ViewProfile: React.FC = () => {
     }
   };
 
+  /**
+   * Handles keyboard navigation
+   * @param {React.KeyboardEvent} event - Keyboard event
+   */
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    // Allow Enter or Space to activate buttons
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      const target = event.target as HTMLElement;
+      if (target.tagName === "BUTTON") {
+        target.click();
+      }
+    }
+  };
+
+  // Loading state
   if (loading) {
     return (
       <>
         <UserNavbar />
         <div className="profile-container">
-          <div className="profile-box">
-            <p className="profile-loading">Cargando perfil...</p>
+          <div className="profile-wrapper">
+            <Link
+              to="/dashboard"
+              className="back-arrow-profile"
+              aria-label="Volver al dashboard"
+            >
+              <span aria-hidden="true">←</span>
+            </Link>
+            <div className="profile-box">
+              <p
+                className="profile-loading"
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+              >
+                Cargando perfil...
+              </p>
+            </div>
           </div>
         </div>
       </>
     );
   }
 
+  // Error state
   if (error) {
     return (
       <>
         <UserNavbar />
         <div className="profile-container">
-          <div className="profile-box">
-            <h2 className="profile-title">Completa tu Perfil</h2>
-            <p className="profile-error">{error}</p>
-            <button
-              className="profile-edit-btn"
-              onClick={handleCompleteProfile}
-              style={{ marginTop: "1rem" }}
+          <div className="profile-wrapper">
+            <Link
+              to="/dashboard"
+              className="back-arrow-profile"
+              aria-label="Volver al dashboard"
             >
-              Completar perfil automáticamente
-            </button>
+              <span aria-hidden="true">←</span>
+            </Link>
+            <div className="profile-box">
+              <h2 className="profile-title">Completa tu Perfil</h2>
+              <p className="profile-error" role="alert" aria-live="assertive">
+                {error}
+              </p>
+              <button
+                className="profile-edit-btn"
+                onClick={handleCompleteProfile}
+                onKeyDown={handleKeyDown}
+                style={{ marginTop: "1rem" }}
+                aria-label="Completar perfil automáticamente"
+                autoFocus
+              >
+                Completar perfil automáticamente
+              </button>
+            </div>
           </div>
         </div>
       </>
@@ -190,37 +257,91 @@ const ViewProfile: React.FC = () => {
       <UserNavbar />
 
       <div className="profile-container">
-        <div className="profile-box">
-          <h2 className="profile-title">Mi Perfil</h2>
+        <div className="profile-wrapper">
+          <Link
+            to="/dashboard"
+            className="back-arrow-profile"
+            aria-label="Volver al dashboard"
+          >
+            <span aria-hidden="true">←</span>
+          </Link>
 
-          {userData.photoURL && (
-            <div className="profile-photo-container">
-              <img
-                src={userData.photoURL}
-                alt="Foto de perfil"
-                className="profile-photo"
-              />
+          <div
+            className="profile-box"
+            role="main"
+            aria-label="Información del perfil"
+          >
+            <h2 className="profile-title" id="profile-heading">
+              Mi Perfil
+            </h2>
+
+            {userData.photoURL && (
+              <div className="profile-photo-container">
+                <img
+                  src={userData.photoURL}
+                  alt={`Foto de perfil de ${userData.name}`}
+                  className="profile-photo"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      // Optional: Open photo in modal or full size
+                      console.log("Photo focused/activated");
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            <div className="profile-field">
+              <label className="profile-label" id="name-label">
+                Nombre completo
+              </label>
+              <div
+                className="profile-value"
+                aria-labelledby="name-label"
+                role="text"
+              >
+                {userData.name}
+              </div>
             </div>
-          )}
 
-          <div className="profile-field">
-            <label className="profile-label">Nombre completo</label>
-            <div className="profile-value">{userData.name}</div>
+            <div className="profile-field">
+              <label className="profile-label" id="email-label">
+                Correo electrónico
+              </label>
+              <div
+                className="profile-value"
+                aria-labelledby="email-label"
+                role="text"
+              >
+                {userData.email}
+              </div>
+            </div>
+
+            <div className="profile-field">
+              <label className="profile-label" id="age-label">
+                Edad
+              </label>
+              <div
+                className="profile-value"
+                aria-labelledby="age-label"
+                role="text"
+              >
+                {userData.age} años
+              </div>
+            </div>
+
+            <button
+              ref={editButtonRef}
+              className="profile-edit-btn"
+              onClick={handleEditClick}
+              onKeyDown={handleKeyDown}
+              aria-label="Editar información del perfil"
+              type="button"
+            >
+              Editar perfil
+            </button>
           </div>
-
-          <div className="profile-field">
-            <label className="profile-label">Correo electrónico</label>
-            <div className="profile-value">{userData.email}</div>
-          </div>
-
-          <div className="profile-field">
-            <label className="profile-label">Edad</label>
-            <div className="profile-value">{userData.age} años</div>
-          </div>
-
-          <button className="profile-edit-btn" onClick={handleEditClick}>
-            Editar perfil
-          </button>
         </div>
       </div>
     </>

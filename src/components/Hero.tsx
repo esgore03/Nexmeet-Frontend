@@ -1,3 +1,14 @@
+/**
+ * @fileoverview The Hero component serves as the landing section of the application.
+ * It includes a fixed top bar with navigation buttons and a hero banner with a title,
+ * subtitle, and main promotional image. Accessibility features include focus visibility,
+ * alt text for images, and live region updates for screen readers.
+ *
+ * @component
+ * @example
+ * return <Hero />;
+ */
+
 import hero1 from "../assets/hero1.jpeg";
 import "../styles/Hero.scss";
 import { useNavigate } from "react-router-dom";
@@ -6,15 +17,28 @@ import logo from "../assets/logo.png";
 const Hero: React.FC = () => {
   const navigate = useNavigate();
 
+  /**
+   * Navigates the user to the login page.
+   * @function
+   */
   const handleLoginClick = () => navigate("/login");
+
+  /**
+   * Navigates the user to the registration page.
+   * @function
+   */
   const handleSignUpClick = () => navigate("/register");
-  const handleAboutClick = () => navigate("/about"); 
+
+  /**
+   * Navigates the user to the about page.
+   * @function
+   */
+  const handleAboutClick = () => navigate("/about");
 
   return (
-    <section className="hero">
-      {/* Top Bar - Replaces Navbar */}
+    <section className="hero" aria-live="polite">
       <div className="hero-topbar">
-        <a href="/">
+        <a href="/" aria-label="Go to Nexmeet homepage">
           <img src={logo} className="topbar-logo" alt="Nexmeet Logo" />
           <span id="topbar-logo-text" className="topbar-logo-text">
             Nexmeet
@@ -22,10 +46,10 @@ const Hero: React.FC = () => {
         </a>
 
         <div className="topbar-buttons">
-          
           <button
             onClick={handleAboutClick}
             className="topbar-button about-button"
+            aria-label="Learn more about us"
           >
             Sobre nosotros
           </button>
@@ -33,19 +57,21 @@ const Hero: React.FC = () => {
           <button
             onClick={handleLoginClick}
             className="topbar-button login-button"
+            aria-label="Go to login page"
           >
-            Iniciar Sesión{" "}
+            Iniciar Sesión
           </button>
+
           <button
             onClick={handleSignUpClick}
             className="topbar-button signup-button"
+            aria-label="Go to registration page"
           >
-            Registrarse{" "}
+            Registrarse
           </button>
         </div>
       </div>
 
-      {/* Hero Content */}
       <div className="hero__content">
         <div className="hero__text-wrapper">
           <h1 className="hero__title">Conéctate sin límites con Nexmeet</h1>
@@ -55,7 +81,7 @@ const Hero: React.FC = () => {
         <div className="hero__image-wrapper">
           <img
             src={hero1}
-            alt="Nexmeet - Conexión inteligente"
+            alt="Nexmeet promotional illustration showing smart connection"
             className="hero__image"
           />
         </div>
@@ -63,7 +89,7 @@ const Hero: React.FC = () => {
 
       <p className="hero__description-text">
         Organiza reuniones fácilmente, planifica y administra reuniones de vídeo
-        de forma sencilla{" "}
+        de forma sencilla
       </p>
     </section>
   );

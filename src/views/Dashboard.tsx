@@ -1,3 +1,14 @@
+/**
+ * @fileoverview The Dashboard component serves as the central hub for Nexmeet users.
+ * It allows users to create new meetings, join existing ones, and manage their sessions.
+ * Accessibility features include aria-live for screen readers and focus-visible outlines
+ * for keyboard navigation.
+ *
+ * @component
+ * @example
+ * return <Dashboard />;
+ */
+
 import "../styles/Dashboard.scss";
 import UserNavbar from "../components/UserNavbar";
 import hero2 from "../assets/hero2.jpeg";
@@ -5,6 +16,13 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { request } from "../utils/request";
 
+/**
+ * Type representing the result of a meeting creation request.
+ * @typedef {Object} CreateMeetingResult
+ * @property {boolean} success - Indicates if the meeting creation was successful.
+ * @property {string} [id] - The ID of the created meeting, if successful.
+ * @property {string} [error] - Error message if the creation failed.
+ */
 type CreateMeetingResult =
   | { success: true; id: string }
   | { success: false; error: string };
@@ -15,17 +33,24 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  /**
+   * Handles meeting creation by sending a request to the backend.
+   * Displays errors and manages loading state.
+   *
+   * @async
+   * @function handleCrearReunion
+   * @returns {Promise<void>}
+   */
   const handleCrearReunion = async () => {
     setLoading(true);
     setError("");
 
     try {
-      // Obtener userId del localStorage
       const userId = localStorage.getItem("userId");
 
       if (!userId) {
         setError(
-          "No se encontró información del usuario. Por favor, inicia sesión.",
+          "User information not found. Please log in before creating a meeting.",
         );
         setLoading(false);
         return;
@@ -44,26 +69,33 @@ const Dashboard: React.FC = () => {
         return;
       }
 
-      // Navegar a la reunión
       navigate(`/meeting/${response.id}`);
     } catch (error) {
-      console.error("Error creando la reunión:", error);
-      setError("Error al crear la reunión. Intenta nuevamente.");
+      console.error("Error creating meeting:", error);
+      setError(
+        "An error occurred while creating the meeting. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Handles joining a meeting by ID.
+   *
+   * @function handleUnirseReunion
+   * @returns {void}
+   */
   const handleUnirseReunion = () => {
     if (!joinId.trim()) {
-      setError("Por favor, ingresa un ID de reunión");
+      setError("Please enter a valid meeting ID.");
       return;
     }
     navigate(`/meeting/${joinId.trim()}`);
   };
 
   return (
-    <section className="dashboard">
+    <section className="dashboard" aria-live="polite">
       <UserNavbar />
 
       <div className="dashboard__content">
@@ -79,6 +111,7 @@ const Dashboard: React.FC = () => {
               className="dashboard__button"
               onClick={handleCrearReunion}
               disabled={loading}
+              aria-label="Create a new meeting"
             >
               {loading ? "Creando..." : "Crear nueva reunión"}
             </button>
@@ -94,23 +127,33 @@ const Dashboard: React.FC = () => {
                 }}
                 className="dashboard__join-input"
                 onKeyPress={(e) => e.key === "Enter" && handleUnirseReunion()}
+                aria-label="Enter meeting ID"
               />
               <button
                 className="dashboard__button dashboard__button--secondary"
                 onClick={handleUnirseReunion}
+                aria-label="Join meeting by ID"
               >
                 Unirse a reunión
               </button>
             </div>
 
-            {error && <p className="dashboard__error">{error}</p>}
+            {error && (
+              <p
+                className="dashboard__error"
+                role="alert"
+                aria-live="assertive"
+              >
+                {error}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="dashboard__image-wrapper">
           <img
             src={hero2}
-            alt="Dashboard preview"
+            alt="Nexmeet dashboard preview"
             className="dashboard__image"
           />
         </div>
