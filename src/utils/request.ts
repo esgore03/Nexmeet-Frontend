@@ -18,7 +18,7 @@ const baseUrl = import.meta.env.VITE_BACKEND_URL ?? "";
  *
  * @typedef {"GET" | "POST" | "PUT" | "DELETE"} Method
  */
-
+type Method = "GET" | "POST" | "PUT" | "DELETE";
 /**
  * Configuration options for making an HTTP request.
  *
@@ -30,6 +30,13 @@ const baseUrl = import.meta.env.VITE_BACKEND_URL ?? "";
  * @property {Record<string, string>} [headers] - Optional additional headers to include in the request.
  */
 
+type RequestOptions = {
+  method: Method;
+  endpoint: string;
+  data?: unknown;
+  params?: Record<string, string>;
+  headers?: Record<string, string>;
+};
 /**
  * Makes an HTTP request using the given options and returns the parsed JSON response.
  * Throws an error if the response is not successful.
@@ -68,7 +75,7 @@ export async function request<T>(options: RequestOptions): Promise<T> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "Request failed");
+    throw new Error(error.error || "Error en la petición");
   }
 
   const json = await response.json();
