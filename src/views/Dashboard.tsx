@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleCrearReunion = () => navigate("/meeting");
+const handleCrearReunion = () => navigate("/meeting/create");
+
 
   return (
     <section className="dashboard">
@@ -14,16 +15,14 @@ const Dashboard: React.FC = () => {
 
       <div className="dashboard__content">
         <div className="dashboard__text-wrapper">
-          <h1 className="dashboard__title">Bienvenido a tu panel Nexmeet</h1>
+          <h1 className="dashboard__title">Bienvenido a tu panel NexMeet</h1>
+
           <p className="dashboard__subtitle">
             Gestiona tus reuniones, conéctate con otros usuarios y organiza tu
             tiempo fácilmente.
           </p>
 
-          <button
-            className="dashboard__button"
-            onClick={handleCrearReunion}
-          >
+          <button className="dashboard__button" onClick={handleCrearReunion}>
             Crear nueva reunión
           </button>
         </div>

@@ -1,149 +1,101 @@
 .dashboard {
-  position: relative;
-  width: 100vw;
+  background: #0d0d0f;
   min-height: 100vh;
-  overflow: hidden;
-  background: linear-gradient(135deg, #0d0d0f 0%, #1a1a1d 100%);
+  width: 100%;
+  padding-top: 110px;
+
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+}
 
-  &__content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 3rem;
-    padding-top: 100px;
+/* Contenido principal */
+.dashboard__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
+  max-width: 1200px;
 
-    @media (max-width: 900px) {
-      flex-direction: column;
-      text-align: center;
-      width: 95%;
-      gap: 2rem;
-    }
-  }
+  margin-top: 40px;
+  gap: 3rem;
 
-  &__text-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.8rem;
-    animation: slideInLeft 0.8s ease-out;
-  }
-
-  &__title {
-    font-size: 3.2rem;
-    font-weight: 700;
-    color: #ffffff;
-    padding-left: 100px;
-    animation: fadeInUp 0.8s ease-out 0.2s backwards;
-  }
-
-  &__subtitle {
-    font-size: 1.1rem;
-    color: #a0a0a0;
-    padding-left: 100px;
-    animation: fadeInUp 0.8s ease-out 0.4s backwards;
-  }
-
-  &__button {
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 12px 28px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    width: fit-content;
-    margin-left: 100px;
-    margin-top: 20px;
-    transition: all 0.2s ease;
-    animation: fadeInUp 0.8s ease-out 0.6s backwards;
-
-    &:hover {
-      background: #1e4ed8;
-      transform: translateY(-2px);
-    }
-  }
-
-  &__image-wrapper {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    animation: slideInRight 0.8s ease-out 0.3s backwards;
-  }
-
-  &__image {
-    width: 100%;
-    max-width: 800px;
-    height: auto;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    object-fit: contain;
-    animation: floating 3s ease-in-out infinite;
-  }
-
-  &__description-text {
-    font-size: 1.2rem;
-    color: #e5e5e5;
+  @media (max-width: 900px) {
+    flex-direction: column-reverse;
     text-align: center;
-    font-weight: 500;
-    margin-top: 60px;
-    max-width: 800px;
-    padding-bottom: 40px;
-    animation: fadeInUp 0.8s ease-out 0.6s backwards;
   }
 }
 
-@keyframes floating {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
+/* Texto */
+.dashboard__text-wrapper {
+  flex: 1;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.dashboard__title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+
+  @media (max-width: 900px) {
+    font-size: 2.2rem;
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+.dashboard__subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  max-width: 450px;
+}
+
+/* Botón */
+.dashboard__button {
+  width: fit-content;
+  background: #4b63ff;
+  color: white;
+  padding: 0.9rem 1.8rem;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #3c52d5;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  @media (max-width: 900px) {
+    margin: 0 auto;
   }
 }
 
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+/* Imagen */
+.dashboard__image-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.dashboard__image {
+  width: 90%;
+  max-width: 450px;
+  border-radius: 18px;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.45);
+}
+
+/* Texto final */
+.dashboard__description-text {
+  color: #d4d4d4;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 1.1rem;
+  opacity: 0.85;
+
+  margin-bottom: 50px;
+  width: 90%;
+  max-width: 800px;
 }
