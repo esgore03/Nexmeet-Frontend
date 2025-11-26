@@ -1,71 +1,10 @@
-/* Evitar scrollbar general */
-body {
-    overflow-x: hidden;
-}
+// ... estilos existentes ...
 
-/* Contenedor que centra todo */
-.profile-container {
-    background: #0d0d0f;
-    min-height: 100vh;
-    padding-top: 110px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    overflow: hidden; /* evita scroll */
-}
-
-/* Caja principal */
-.profile-box {
-    background: #1a1a1d;
-    width: 95%;
-    max-width: 520px;
-    padding: 2rem 2.4rem;
-    border-radius: 16px;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+.profile-field {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
-    overflow: hidden;
-}
-
-.profile-title {
-    color: white;
-    text-align: center;
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-}
-
-.profile-label {
-    color: #e5e5e5;
-    font-size: 0.95rem;
+    gap: 0.4rem;
     margin-top: 8px;
-}
-
-/* INPUTS MÁS PROLIJOS Y CURSOR AL FINAL */
-.profile-input {
-    padding: 0.75rem 1rem;
-    background: #2a2a2e;
-    color: white;
-    border: 1px solid #333;
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: 0.2s ease;
-
-    /* cursor al final SIEMPRE */
-    direction: rtl;
-    text-align: left;
-
-    &:focus {
-        border-color: #5044e5;
-        outline: none;
-        background: #242428;
-    }
-
-    &::placeholder {
-        color: #666;
-        direction: ltr;
-    }
 }
 
 .profile-value {
@@ -80,7 +19,6 @@ body {
     align-items: center;
 }
 
-/* Botón de guardar */
 .profile-edit-btn {
     margin-top: 12px;
     background: #5044e5;
@@ -97,18 +35,14 @@ body {
     }
 }
 
-.profile-msg {
-    margin-top: 10px;
+.profile-loading,
+.profile-error {
+    color: white;
     text-align: center;
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 1.1rem;
 }
 
-.profile-msg-success {
-    color: #10b981;
-}
-
-.profile-msg-error {
+.profile-error {
     color: #ef4444;
 }
 
