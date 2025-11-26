@@ -11,12 +11,78 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
 
         h1 {
             color: #ffffff;
             font-size: 3rem;
             text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
         }
+    }
+
+    .meeting-id-display {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 5;
+
+        p {
+            color: white;
+            margin: 0;
+            font-size: 14px;
+
+            strong {
+                color: #5044e5;
+                font-weight: 600;
+            }
+        }
+
+        .copy-btn {
+            background: #5044e5;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: #453acf;
+                transform: translateY(-1px);
+            }
+
+            &:focus {
+                outline: 2px solid #60a5fa;
+                outline-offset: 2px;
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+    }
+
+    .error-message {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ef4444;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 5;
+        animation: fadeIn 0.3s ease;
     }
 
     .bottom-controls {
@@ -121,6 +187,7 @@
             align-items: center;
             justify-content: center;
             padding: 10px;
+            position: relative;
 
             &:focus {
                 outline: 3px solid #4a9eff;
@@ -152,25 +219,44 @@
                 object-fit: contain;
                 pointer-events: none;
             }
+
+            .badge {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #ef4444;
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: bold;
+                animation: pulse 2s infinite;
+            }
         }
     }
 
+    // ✅ PANEL DE CHAT - CORREGIDO
     .chat-panel {
-        position: absolute;
-        right: -400px;
+        position: fixed; // ✅ Cambio de absolute a fixed
+        right: 0;
         top: 0;
         width: 400px;
-        height: 100%;
+        height: 100vh; // ✅ Cambio de 100% a 100vh
         background: rgba(26, 26, 29, 0.95);
         backdrop-filter: blur(10px);
         box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
-        transition: right 0.3s ease;
+        transform: translateX(100%); // ✅ Usar transform en lugar de right
+        transition: transform 0.3s ease; // ✅ Transición en transform
         display: flex;
         flex-direction: column;
         z-index: 20;
 
         &.open {
-            right: 0;
+            transform: translateX(0); // ✅ Abrir con transform
         }
 
         .panel-header {
@@ -180,6 +266,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0; // ✅ Prevenir que se encoja
 
             h3 {
                 margin: 0;
@@ -217,6 +304,10 @@
                 &:hover {
                     opacity: 0.7;
                     background: rgba(255, 255, 255, 0.1);
+                }
+
+                &:active {
+                    transform: scale(0.9);
                 }
             }
         }
@@ -259,10 +350,50 @@
                 border-radius: 10px;
                 max-width: 80%;
                 align-self: flex-start;
+                animation: slideIn 0.3s ease;
+
+                &.own-message {
+                    background: #5044e5;
+                    align-self: flex-end;
+
+                    .message-header {
+                        .message-author {
+                            color: rgba(255, 255, 255, 0.9);
+                        }
+
+                        .message-time {
+                            color: rgba(255, 255, 255, 0.7);
+                        }
+                    }
+
+                    .message-text {
+                        color: white;
+                    }
+                }
+
+                .message-header {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 4px;
+                    font-size: 12px;
+                    gap: 10px;
+
+                    .message-author {
+                        font-weight: 600;
+                        color: #3b82f6;
+                    }
+
+                    .message-time {
+                        font-size: 11px;
+                        color: #999;
+                    }
+                }
 
                 .message-text {
                     color: #e5e5e5;
                     word-wrap: break-word;
+                    word-break: break-word;
+                    line-height: 1.4;
                 }
             }
         }
@@ -272,6 +403,7 @@
             display: flex;
             gap: 10px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0; // ✅ Prevenir que se encoja
 
             .chat-input {
                 flex: 1;
@@ -341,20 +473,24 @@
         }
     }
 
+    // ✅ PANEL DE PARTICIPANTES - CORREGIDO
     .participants-panel {
-        position: absolute;
-        right: -400px;
+        position: fixed; // ✅ Cambio de absolute a fixed
+        right: 0;
         top: 0;
         width: 400px;
-        height: 100%;
+        height: 100vh; // ✅ Cambio de 100% a 100vh
         background: rgba(26, 26, 29, 0.95);
         backdrop-filter: blur(10px);
         box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
-        transition: right 0.3s ease;
+        transform: translateX(100%); // ✅ Usar transform en lugar de right
+        transition: transform 0.3s ease; // ✅ Transición en transform
         z-index: 20;
+        display: flex; // ✅ Añadido
+        flex-direction: column; // ✅ Añadido
 
         &.open {
-            right: 0;
+            transform: translateX(0); // ✅ Abrir con transform
         }
 
         .panel-header {
@@ -364,6 +500,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0; // ✅ Prevenir que se encoja
 
             h3 {
                 margin: 0;
@@ -402,29 +539,48 @@
                     opacity: 0.7;
                     background: rgba(255, 255, 255, 0.1);
                 }
+
+                &:active {
+                    transform: scale(0.9);
+                }
             }
         }
 
         .participants-content {
+            flex: 1; // ✅ Ocupa el espacio restante
             padding: 20px;
+            overflow-y: auto;
 
-            p {
-                font-size: 1.2rem;
-                color: #e5e5e5;
-                margin-bottom: 15px;
+            &::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: rgba(59, 130, 246, 0.5);
+                border-radius: 4px;
+
+                &:hover {
+                    background: rgba(59, 130, 246, 0.7);
+                }
             }
 
             .participants-list {
                 list-style: none;
                 padding: 0;
+                margin: 0;
 
-                li {
-                    padding: 15px;
+                .participant-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px;
                     background: rgba(59, 130, 246, 0.15);
                     margin-bottom: 10px;
                     border-radius: 8px;
-                    color: #f5f5f5;
-                    font-weight: 500;
                     transition: all 0.2s ease;
                     border: 2px solid transparent;
 
@@ -437,9 +593,79 @@
                         outline-offset: 2px;
                         border-color: #4a9eff;
                     }
+
+                    .participant-avatar {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        border: 2px solid #5044e5;
+                        flex-shrink: 0; // ✅ Prevenir que se encoja
+                    }
+
+                    .participant-info {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+                        flex: 1;
+                        overflow: hidden;
+                        min-width: 0; // ✅ Permite que text-overflow funcione
+
+                        .participant-name {
+                            color: #ffffff;
+                            font-weight: 600;
+                            font-size: 14px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+
+                        .participant-email {
+                            color: #999;
+                            font-size: 12px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+// Animaciones
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
     }
 }
 

@@ -11,12 +11,11 @@ import React, { useState } from "react";
 import "../styles/Login.scss";
 import { Link } from "react-router-dom";
 import { validateLoginForm } from "../utils/validators";
-import { loginUser } from "../utils/authApi";
 import logo from "../assets/logo.png";
 import facebook from "../assets/facebook.webp";
 import github from "../assets/github.png";
 import google from "../assets/google.png";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth"; // ✅ Agregado
 import {
   auth,
   googleProvider,
@@ -26,38 +25,27 @@ import {
 import { httpClient } from "../utils/httpClient";
 import { API_ENDPOINTS } from "../utils/constants";
 
-const handleSocialLogin = async (provider: any) => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    const token = await user.getIdToken();
-
-    // Guarda token y usuario localmente
-    localStorage.setItem("authToken", token);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photoURL: user.photoURL,
-      }),
-    );
-
-    // Notifica al backend para registrar al usuario si no existe
-    await httpClient.post(API_ENDPOINTS.REGISTER, {
-      name: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL,
-      age: 25, // esto puedes cambiarlo o quitarlo según tu lógica
-    });
-
-    window.location.href = "/home";
-  } catch (error: any) {
-    console.error("Error en login social:", error);
-    alert("Hubo un error al iniciar sesión con el proveedor.");
+/**
+ * Displays a temporary popup message for successful actions.
+ * @param {string} message - The success message to display.
+ */
+function showSuccess(message: string) {
+  let popup = document.getElementById("popup-message");
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "popup-message";
+    document.body.appendChild(popup);
   }
-};
+
+  popup.className = "popup-message popup-success popup-show";
+  popup.textContent = message;
+
+  clearTimeout((popup as any)._timeout);
+  (popup as any)._timeout = setTimeout(() => {
+    popup?.classList.remove("popup-show");
+  }, 3000);
+}
+
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
@@ -72,10 +60,12 @@ const Login: React.FC = () => {
     setFormError(null);
   };
 
+  // ✅ NUEVO: Login tradicional con Firebase Auth
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
+    // Validar formulario
     const { isValid, errors: validationErrors } = validateLoginForm(formData);
     if (!isValid) {
       setErrors(validationErrors);
@@ -84,33 +74,164 @@ const Login: React.FC = () => {
 
     setLoading(true);
     try {
-      await loginUser(formData);
+      // 1️⃣ Autenticar con Firebase
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password,
+      );
+
+      const user = userCredential.user;
+      const token = await user.getIdToken();
+
+      // 2️⃣ Guardar token y datos en localStorage
+      localStorage.setItem("authToken", token);
+
+      // 3️⃣ Obtener datos adicionales del backend (opcional)
+      try {
+        const userData = await httpClient.get(`/api/users/${user.uid}`);
+        localStorage.setItem("user", JSON.stringify(userData));
+      } catch (error) {
+        // Si no existe en el backend, guardar datos básicos de Firebase
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: user.uid,
+            email: user.email,
+            name: user.displayName || formData.email.split("@")[0],
+            photoURL: user.photoURL,
+          }),
+        );
+      }
+
       showSuccess("Login successful! Redirecting...");
       setTimeout(() => {
-        window.location.href = "/home";
+        window.location.href = "/dashboard";
       }, 1500);
     } catch (error: any) {
-      setFormError(error.message || "Failed to log in");
+      console.error("Error en login:", error);
+
+      // Manejar errores específicos de Firebase
+      let errorMessage = "Error al iniciar sesión";
+
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No existe una cuenta con este email";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Contraseña incorrecta";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "El formato del email es inválido";
+      } else if (error.code === "auth/user-disabled") {
+        errorMessage = "Esta cuenta ha sido deshabilitada";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Demasiados intentos fallidos. Intenta más tarde";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Email o contraseña incorrectos";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      setFormError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const showSuccess = (message: string) => {
-    let popup = document.getElementById("popup-message");
-    if (!popup) {
-      popup = document.createElement("div");
-      popup.id = "popup-message";
-      document.body.appendChild(popup);
+  // ✅ ACTUALIZADO: Login social
+  const handleSocialLogin = async (provider: any) => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const token = await user.getIdToken();
+
+      // ✅ SOLUCIÓN: Obtener nombre con fallback
+      const userName =
+        user.displayName || user.email?.split("@")[0] || "Usuario";
+
+      localStorage.setItem("authToken", token);
+
+      try {
+        const userData = await httpClient.get(`/api/users/${user.uid}`);
+        localStorage.setItem("user", JSON.stringify(userData));
+      } catch (error: any) {
+        if (error?.status === 404 || error?.status === 400) {
+          await httpClient.post(API_ENDPOINTS.REGISTER, {
+            name: userName, // ✅ Usar el nombre con fallback
+            photoURL: user.photoURL,
+            age: 25,
+          });
+
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              id: user.uid,
+              email: user.email,
+              name: userName, // ✅ Usar el nombre con fallback
+              photoURL: user.photoURL,
+            }),
+          );
+        }
+      }
+
+      showSuccess("¡Login exitoso! Redirigiendo...");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1500);
+    } catch (error: any) {
+      console.error("Error en login social:", error);
+
+      if (error?.code === "auth/account-exists-with-different-credential") {
+        try {
+          const email = error.customData?.email;
+
+          if (!email) {
+            setFormError("No se pudo obtener el email. Intenta nuevamente.");
+            return;
+          }
+
+          const methods = await fetchSignInMethodsForEmail(auth, email);
+
+          const providerNames: { [key: string]: string } = {
+            "google.com": "Google",
+            "facebook.com": "Facebook",
+            "github.com": "GitHub",
+            password: "Email/Contraseña",
+          };
+
+          const existingProvider = providerNames[methods[0]] || methods[0];
+
+          setFormError(
+            `Este email ya está registrado con ${existingProvider}. ` +
+              `Por favor, inicia sesión con ${existingProvider} primero.`,
+          );
+
+          localStorage.setItem(
+            "pendingCredential",
+            JSON.stringify({
+              email,
+              providerId: error.credential?.providerId,
+              credential: error.credential?.toJSON(),
+            }),
+          );
+        } catch (linkError) {
+          console.error("Error al manejar cuenta duplicada:", linkError);
+          setFormError(
+            "Ya existe una cuenta con este email usando otro método de inicio de sesión.",
+          );
+        }
+        return;
+      }
+
+      if (error?.code === "auth/popup-closed-by-user") {
+        setFormError("El proceso de inicio de sesión fue cancelado");
+        return;
+      }
+
+      if (error?.code === "auth/cancelled-popup-request") {
+        return;
+      }
+
+      setFormError("Hubo un error al iniciar sesión con el proveedor.");
     }
-
-    popup.className = "popup-message popup-success popup-show";
-    popup.textContent = message;
-
-    clearTimeout((popup as any)._timeout);
-    (popup as any)._timeout = setTimeout(() => {
-      popup?.classList.remove("popup-show");
-    }, 3000);
   };
 
   return (
@@ -181,12 +302,13 @@ const Login: React.FC = () => {
                 disabled={loading}
                 aria-label={loading ? "Iniciando sesión" : "Iniciar sesión"}
               >
-                {loading ? "Loading..." : "Iniciar sesión"}
+                {loading ? "Iniciando sesión..." : "Iniciar sesión"}
               </button>
-               
-               <Link to="/recover-password" className="forgot-password">
-        ¿Olvidaste tu contraseña?
-    </Link>
+
+              <Link to="/recover-password" className="forgot-password">
+                ¿Olvidaste tu contraseña?
+              </Link>
+
               {formError && (
                 <div
                   className="error-message"
@@ -211,14 +333,18 @@ const Login: React.FC = () => {
             {/* Redes sociales */}
             <div className="social-media-container">
               <button
+                type="button"
                 className="social-link"
                 onClick={() => handleSocialLogin(googleProvider)}
+                aria-label="Iniciar sesión con Google"
               >
                 <img src={google} className="social-logo" alt="Google Logo" />
               </button>
               <button
+                type="button"
                 className="social-link"
                 onClick={() => handleSocialLogin(facebookProvider)}
+                aria-label="Iniciar sesión con Facebook"
               >
                 <img
                   src={facebook}
@@ -227,8 +353,10 @@ const Login: React.FC = () => {
                 />
               </button>
               <button
+                type="button"
                 className="social-link"
                 onClick={() => handleSocialLogin(githubProvider)}
+                aria-label="Iniciar sesión con GitHub"
               >
                 <img src={github} className="social-logo" alt="Github Logo" />
               </button>

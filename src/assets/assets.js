@@ -11,7 +11,7 @@ import camera from "camera.png";
 import micro from "micro.png";
 import end_call from "./end_call.webp";
 import chat from "./chat.png";
-import participants from "./participants.png";
+import participants_logo from "./participants_logo.png";
 
 const assets = {
   moon_icon,
@@ -27,7 +27,7 @@ const assets = {
   micro,
   end_call,
   chat,
-  participants,
+  participants_logo,
 };
 
 export default assets;
