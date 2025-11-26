@@ -4,7 +4,7 @@ import hero1 from "./hero1.jpeg";
 import hero2 from "./hero2.jpeg";
 import hero3 from "./hero3.jpg";
 import logo from "./logo.png";
-import facebook from "./facebook.webp";
+import discord from "./discord.webp";
 import github from "./github.png";
 import google from "./google.png";
 import camera from "camera.png";
@@ -20,7 +20,7 @@ const assets = {
   hero2,
   hero3,
   logo,
-  facebook,
+  discord,
   github,
   google,
   camera,

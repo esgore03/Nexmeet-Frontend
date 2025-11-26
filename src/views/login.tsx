@@ -1,35 +1,22 @@
-/**
- * @file Login.tsx
- * @description Login page component for PopFix. Handles user authentication,
- * form validation, error display, and success feedback through a popup.
- *
- * This component allows users to log in using their email and password,
- * validates inputs, and provides visual feedback during the process.
- */
-
 import React, { useState } from "react";
 import "../styles/Login.scss";
 import { Link } from "react-router-dom";
 import { validateLoginForm } from "../utils/validators";
 import logo from "../assets/logo.png";
-import facebook from "../assets/facebook.webp";
+import discord from "../assets/discord.webp"; // ✅ Cambio aquí
 import github from "../assets/github.png";
 import google from "../assets/google.png";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth"; // ✅ Agregado
+import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import {
   auth,
   googleProvider,
-  facebookProvider,
+  discordProvider, // ✅ Cambio aquí
   githubProvider,
 } from "../config/firebase";
 import { httpClient } from "../utils/httpClient";
 import { API_ENDPOINTS } from "../utils/constants";
 import { fetchSignInMethodsForEmail } from "firebase/auth";
 
-/**
- * Displays a temporary popup message for successful actions.
- * @param {string} message - The success message to display.
- */
 function showSuccess(message: string) {
   let popup = document.getElementById("popup-message");
   if (!popup) {
@@ -61,12 +48,10 @@ const Login: React.FC = () => {
     setFormError(null);
   };
 
-  // ✅ NUEVO: Login tradicional con Firebase Auth
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
-    // Validar formulario
     const { isValid, errors: validationErrors } = validateLoginForm(formData);
     if (!isValid) {
       setErrors(validationErrors);
@@ -75,7 +60,6 @@ const Login: React.FC = () => {
 
     setLoading(true);
     try {
-      // 1️⃣ Autenticar con Firebase
       const userCredential = await signInWithEmailAndPassword(
         auth,
         formData.email,
@@ -85,15 +69,12 @@ const Login: React.FC = () => {
       const user = userCredential.user;
       const token = await user.getIdToken();
 
-      // 2️⃣ Guardar token y datos en localStorage
       localStorage.setItem("authToken", token);
 
-      // 3️⃣ Obtener datos adicionales del backend (opcional)
       try {
         const userData = await httpClient.get(`/api/users/${user.uid}`);
         localStorage.setItem("user", JSON.stringify(userData));
       } catch (error) {
-        // Si no existe en el backend, guardar datos básicos de Firebase
         localStorage.setItem(
           "user",
           JSON.stringify({
@@ -112,7 +93,6 @@ const Login: React.FC = () => {
     } catch (error: any) {
       console.error("Error en login:", error);
 
-      // Manejar errores específicos de Firebase
       let errorMessage = "Error al iniciar sesión";
 
       if (error.code === "auth/user-not-found") {
@@ -137,14 +117,12 @@ const Login: React.FC = () => {
     }
   };
 
-  // ✅ ACTUALIZADO: Login social
   const handleSocialLogin = async (provider: any) => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const token = await user.getIdToken();
 
-      // ✅ SOLUCIÓN: Obtener nombre con fallback
       const userName =
         user.displayName || user.email?.split("@")[0] || "Usuario";
 
@@ -156,7 +134,7 @@ const Login: React.FC = () => {
       } catch (error: any) {
         if (error?.status === 404 || error?.status === 400) {
           await httpClient.post(API_ENDPOINTS.REGISTER, {
-            name: userName, // ✅ Usar el nombre con fallback
+            name: userName,
             photoURL: user.photoURL,
             age: 25,
           });
@@ -166,7 +144,7 @@ const Login: React.FC = () => {
             JSON.stringify({
               id: user.uid,
               email: user.email,
-              name: userName, // ✅ Usar el nombre con fallback
+              name: userName,
               photoURL: user.photoURL,
             }),
           );
@@ -193,7 +171,7 @@ const Login: React.FC = () => {
 
           const providerNames: { [key: string]: string } = {
             "google.com": "Google",
-            "facebook.com": "Facebook",
+            "oidc.discord": "Discord", // ✅ Cambio aquí
             "github.com": "GitHub",
             password: "Email/Contraseña",
           };
@@ -341,17 +319,14 @@ const Login: React.FC = () => {
               >
                 <img src={google} className="social-logo" alt="Google Logo" />
               </button>
+              {/* ✅ Cambio aquí */}
               <button
                 type="button"
                 className="social-link"
-                onClick={() => handleSocialLogin(facebookProvider)}
-                aria-label="Iniciar sesión con Facebook"
+                onClick={() => handleSocialLogin(discordProvider)}
+                aria-label="Iniciar sesión con Discord"
               >
-                <img
-                  src={facebook}
-                  className="social-logo"
-                  alt="Facebook Logo"
-                />
+                <img src={discord} className="social-logo" alt="Discord Logo" />
               </button>
               <button
                 type="button"
