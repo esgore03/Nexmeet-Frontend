@@ -1,6 +1,6 @@
 /**
  * @file Register.tsx
- * @description Registration page component for PopFix. Handles new user creation,
+ * @description Registration page component for Nexmeet. Handles new user creation,
  * form validation, backend integration, and success/error feedback via popup messages.
  */
 
@@ -9,15 +9,15 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Register.scss";
 import { Link } from "react-router-dom";
 import { validateRegisterForm } from "../utils/validators";
-import facebook from "../assets/facebook.webp";
+import discord from "../assets/discord.png"; // ✅ Cambio aquí
 import github from "../assets/github.png";
 import google from "../assets/google.png";
 import logo from "../assets/logo.png";
-import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth"; // ✅ Agregado
+import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
 import {
   auth,
   googleProvider,
-  facebookProvider,
+  discordProvider, // ✅ Cambio aquí
   githubProvider,
 } from "../config/firebase";
 import { httpClient } from "../utils/httpClient";
@@ -152,9 +152,8 @@ const Register: React.FC = () => {
       const user = result.user;
       const token = await user.getIdToken();
 
-      // ✅ SOLUCIÓN: Obtener nombre con fallback
       const userName =
-        user.displayName || user.email?.split("@")[0] || "Usuario"; // Fallback si todo falla
+        user.displayName || user.email?.split("@")[0] || "Usuario";
 
       // 2️⃣ Guardar token y datos en localStorage
       localStorage.setItem("authToken", token);
@@ -163,14 +162,14 @@ const Register: React.FC = () => {
         JSON.stringify({
           id: user.uid,
           email: user.email,
-          name: userName, // ✅ Usar el nombre con fallback
+          name: userName,
           photoURL: user.photoURL,
         }),
       );
 
       // 3️⃣ Registrar en tu backend
       await httpClient.post(API_ENDPOINTS.REGISTER, {
-        name: userName, // ✅ Usar el nombre con fallback
+        name: userName,
         photoURL: user.photoURL,
         age: 25,
       });
@@ -199,7 +198,7 @@ const Register: React.FC = () => {
       }
 
       setFormError(
-        error?.data?.error || // ✅ Cambiar a error.data.error
+        error?.data?.error ||
           error?.message ||
           "Hubo un error al registrarte con el proveedor social.",
       );
@@ -385,16 +384,17 @@ const Register: React.FC = () => {
                       alt="Google Logo"
                     />
                   </button>
+                  {/* ✅ Cambio aquí: Discord en lugar de Facebook */}
                   <button
                     type="button"
                     className="social-link"
-                    onClick={() => handleSocialRegister(facebookProvider)}
-                    aria-label="Registrarse con Facebook"
+                    onClick={() => handleSocialRegister(discordProvider)}
+                    aria-label="Registrarse con Discord"
                   >
                     <img
-                      src={facebook}
+                      src={discord}
                       className="social-logo"
-                      alt="Facebook Logo"
+                      alt="Discord Logo"
                     />
                   </button>
                   <button
