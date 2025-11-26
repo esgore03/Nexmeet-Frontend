@@ -18,10 +18,6 @@ let socket: Socket | null = null;
  *
  * @function
  * @returns {Socket} The initialized Socket.IO client instance.
- *
- * @example
- * const socket = getSocket();
- * socket.emit("message", "Hello, server!");
  */
 export const getSocket = (): Socket => {
   if (!socket) {
@@ -34,6 +30,10 @@ export const getSocket = (): Socket => {
       autoConnect: false,
       transports: ["websocket", "polling"],
       withCredentials: true,
+
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
     });
 
     // Debugging events
@@ -49,6 +49,10 @@ export const getSocket = (): Socket => {
     socket.on("disconnect", (reason) => {
       console.log("Socket disconnected:", reason);
     });
+
+    socket.on("reconnect", (attemptNumber) => {
+      console.log("Socket reconnected after", attemptNumber, "attempts");
+    });
   }
   return socket;
 };
@@ -58,35 +62,44 @@ export const getSocket = (): Socket => {
  *
  * @function
  * @returns {Socket} The connected Socket.IO client instance.
- *
- * @example
- * const socket = connectSocket();
- * // You can now listen or emit events.
- * socket.emit("joinRoom", { roomId: "12345" });
  */
 export const connectSocket = (): Socket => {
   const socket = getSocket();
   if (!socket.connected) {
     console.log("Connecting socket...");
     socket.connect();
+  } else {
+    console.log("Socket already connected:", socket.id);
   }
   return socket;
 };
 
 /**
  * Disconnects the active socket connection and clears its reference.
- * If no socket is connected, the function does nothing.
+
  *
  * @function
  * @returns {void}
- *
- * @example
- * // Gracefully close the connection when leaving the page or component
- * disconnectSocket();
  */
 export const disconnectSocket = (): void => {
-  if (socket && socket.connected) {
-    console.log("Disconnecting socket...");
+  if (socket) {
+    console.log("Cleaning up socket...");
+
+    socket.off("usersOnline");
+    socket.off("newMessage");
+    socket.off("socketServerError");
+
+    if (socket.connected) {
+      console.log("Disconnecting socket:", socket.id);
+      socket.disconnect();
+    }
+  }
+};
+
+export const resetSocket = (): void => {
+  if (socket) {
+    console.log("Resetting socket completely...");
+    socket.removeAllListeners();
     socket.disconnect();
     socket = null;
   }

@@ -32,6 +32,7 @@ const Meeting: React.FC = () => {
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasJoinedRef = useRef(false);
+  const isCleaningUpRef = useRef(false); // ✅ Prevenir doble limpieza
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
@@ -42,7 +43,7 @@ const Meeting: React.FC = () => {
   const [participants, setParticipants] = useState<UserWithSocketId[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [error, setError] = useState("");
-  const [showToast, setShowToast] = useState(false); // ✅ Estado del toast
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -81,78 +82,123 @@ const Meeting: React.FC = () => {
       return;
     }
 
+    // ✅ Resetear el flag cuando se monta el componente
     if (hasJoinedRef.current) {
       console.log("⚠️ Ya se ha unido a la reunión, evitando duplicado");
       return;
     }
 
-    hasJoinedRef.current = true;
-    console.log("📡 Conectando socket...");
-    const socket = connectSocket();
+    const initializeSocketConnection = () => {
+      hasJoinedRef.current = true;
+      console.log("📡 Conectando socket...");
+      const socket = connectSocket();
 
-    console.log(`🚪 Uniéndose a la reunión ${meetingId} con userId ${userId}`);
-    socket.emit("newUser", userId, meetingId);
-
-    socket.off("usersOnline");
-    socket.off("newMessage");
-    socket.off("socketServerError");
-
-    socket.on(
-      "usersOnline",
-      (
-        users: UserWithSocketId[],
-        joiningUser: UserWithSocketId | null,
-        leavingUser: UserWithSocketId | null,
-      ) => {
-        console.log("👥 Usuarios online:", users);
-        console.log("  - Total participantes:", users.length);
-        setParticipants(users);
-
-        if (joiningUser) {
-          console.log(
-            `✅ ${joiningUser.name || joiningUser.email || "Usuario"} se unió a la reunión`,
-          );
-        }
-        if (leavingUser) {
-          console.log(
-            `👋 ${leavingUser.name || leavingUser.email || "Usuario"} salió de la reunión`,
-          );
-        }
-      },
-    );
-
-    socket.on("newMessage", (msg: Message) => {
-      console.log("💬 Nuevo mensaje recibido:", msg);
-      setMessages((prev) => {
-        const isDuplicate = prev.some(
-          (m) =>
-            m.timestamp === msg.timestamp &&
-            m.userId === msg.userId &&
-            m.message === msg.message,
-        );
-        if (isDuplicate) {
-          console.log("⚠️ Mensaje duplicado detectado, ignorando");
-          return prev;
-        }
-        return [...prev, msg];
-      });
-    });
-
-    socket.on(
-      "socketServerError",
-      (errorData: { origin: string; message: string }) => {
-        console.error("❌ Error del servidor:", errorData);
-        setError(errorData.message);
-      },
-    );
-
-    return () => {
-      console.log("🧹 Limpiando componente Meeting");
-      hasJoinedRef.current = false;
+      // ✅ IMPORTANTE: Limpiar listeners ANTES de agregar nuevos
       socket.off("usersOnline");
       socket.off("newMessage");
       socket.off("socketServerError");
-      disconnectSocket();
+
+      console.log(
+        `🚪 Uniéndose a la reunión ${meetingId} con userId ${userId}`,
+      );
+      socket.emit("newUser", userId, meetingId);
+
+      // ✅ Configurar listeners
+      socket.on(
+        "usersOnline",
+        (
+          users: UserWithSocketId[],
+          joiningUser: UserWithSocketId | null,
+          leavingUser: UserWithSocketId | null,
+        ) => {
+          console.log("👥 Usuarios online:", users);
+          console.log("  - Total participantes:", users.length);
+          console.log(
+            "  - Lista completa:",
+            users.map((u) => ({
+              userId: u.userId,
+              name: u.name,
+              socketId: u.socketId,
+            })),
+          );
+
+          setParticipants(users);
+
+          if (joiningUser) {
+            console.log(
+              `✅ ${joiningUser.name || joiningUser.email || "Usuario"} se unió a la reunión`,
+            );
+          }
+          if (leavingUser) {
+            console.log(
+              `👋 ${leavingUser.name || leavingUser.email || "Usuario"} salió de la reunión`,
+            );
+          }
+        },
+      );
+
+      socket.on("newMessage", (msg: Message) => {
+        console.log("💬 Nuevo mensaje recibido:", msg);
+        setMessages((prev) => {
+          const isDuplicate = prev.some(
+            (m) =>
+              m.timestamp === msg.timestamp &&
+              m.userId === msg.userId &&
+              m.message === msg.message,
+          );
+          if (isDuplicate) {
+            console.log("⚠️ Mensaje duplicado detectado, ignorando");
+            return prev;
+          }
+          return [...prev, msg];
+        });
+      });
+
+      socket.on(
+        "socketServerError",
+        (errorData: { origin: string; message: string }) => {
+          console.error("❌ Error del servidor:", errorData);
+          setError(errorData.message);
+        },
+      );
+
+      // ✅ Manejar reconexión automática
+      socket.on("connect", () => {
+        console.log("🔄 Socket reconectado, volviendo a unirse a la reunión");
+        if (hasJoinedRef.current && meetingId && userId) {
+          socket.emit("newUser", userId, meetingId);
+        }
+      });
+    };
+
+    initializeSocketConnection();
+
+    // ✅ Cleanup mejorado
+    return () => {
+      if (isCleaningUpRef.current) {
+        console.log("⚠️ Ya se está limpiando, evitando duplicado");
+        return;
+      }
+
+      console.log("🧹 Limpiando componente Meeting");
+      isCleaningUpRef.current = true;
+      hasJoinedRef.current = false;
+
+      const socket = getSocket();
+      if (socket) {
+        socket.off("usersOnline");
+        socket.off("newMessage");
+        socket.off("socketServerError");
+        socket.off("connect");
+      }
+
+      // ✅ NO desconectar aquí si solo estás navegando
+      // disconnectSocket();
+
+      // Resetear el flag después de un tiempo
+      setTimeout(() => {
+        isCleaningUpRef.current = false;
+      }, 100);
     };
   }, [meetingId, navigate]);
 
@@ -184,6 +230,8 @@ const Meeting: React.FC = () => {
       if (!meetingId) return;
 
       console.log("🔚 Finalizando llamada...");
+
+      // ✅ Desconectar socket ANTES de navegar
       disconnectSocket();
 
       await request({
@@ -200,7 +248,6 @@ const Meeting: React.FC = () => {
     }
   };
 
-  // ✅ Función mejorada para copiar ID
   const copyMeetingId = () => {
     if (meetingId) {
       navigator.clipboard.writeText(meetingId);
@@ -210,13 +257,11 @@ const Meeting: React.FC = () => {
   };
 
   const toggleChat = () => {
-    console.log("Toggling chat. Estado actual:", isChatOpen);
     setIsChatOpen(!isChatOpen);
     setIsParticipantsOpen(false);
   };
 
   const toggleParticipants = () => {
-    console.log("Toggling participants. Estado actual:", isParticipantsOpen);
     setIsParticipantsOpen(!isParticipantsOpen);
     setIsChatOpen(false);
   };
@@ -238,7 +283,6 @@ const Meeting: React.FC = () => {
         {error && <p className="error-message">{error}</p>}
       </div>
 
-      {/* ✅ Toast Notification */}
       {showToast && (
         <div className="toast-notification">
           <div className="toast-content">
