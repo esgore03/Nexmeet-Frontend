@@ -166,7 +166,7 @@ const Meeting: React.FC = () => {
       socket.on("connect", () => {
         console.log("🔄 Socket reconectado, volviendo a unirse a la reunión");
         if (hasJoinedRef.current && meetingId && userId) {
-          socket.emit("newUser", userId, meetingId);
+          socket.emit("newUser", token, userId, meetingId);
         }
       });
     };
@@ -208,8 +208,8 @@ const Meeting: React.FC = () => {
 
   const handleSendMessage = () => {
     const trimmed = messageInput.trim();
-    if (!trimmed || !meetingId) {
-      console.log("⚠️ Mensaje vacío o sin meetingId");
+    if (!trimmed) {
+      console.log("⚠️ Mensaje vacío");
       return;
     }
 
@@ -221,7 +221,7 @@ const Meeting: React.FC = () => {
     };
 
     console.log("📤 Enviando mensaje:", payload);
-    socket.emit("sendMessage", meetingId, payload);
+    socket.emit("sendMessage", payload);
     setMessageInput("");
   };
 
