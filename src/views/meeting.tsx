@@ -32,7 +32,7 @@ const Meeting: React.FC = () => {
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasJoinedRef = useRef(false);
-  const isCleaningUpRef = useRef(false); // ✅ Prevenir doble limpieza
+  const isCleaningUpRef = useRef(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
@@ -53,11 +53,11 @@ const Meeting: React.FC = () => {
     console.log("🔍 DEBUG localStorage en Meeting:");
     console.log("  - userId:", userId);
     console.log("  - userEmail:", userEmail);
-    console.log("  - authToken:", authToken ? "✅ Existe" : "❌ No existe");
+    console.log("  - authToken:", authToken ? "Existe" : "No existe");
     console.log("  - meetingId:", meetingId);
 
     if (!userId) {
-      console.error("❌ No hay userId en localStorage");
+      console.error("No hay userId en localStorage");
       setError(
         "No se encontró información del usuario. Por favor, visita tu perfil primero.",
       );
@@ -82,28 +82,25 @@ const Meeting: React.FC = () => {
       return;
     }
 
-    // ✅ Resetear el flag cuando se monta el componente
     if (hasJoinedRef.current) {
-      console.log("⚠️ Ya se ha unido a la reunión, evitando duplicado");
+      console.log("Ya se ha unido a la reunión, evitando duplicado");
       return;
     }
 
     const initializeSocketConnection = () => {
       hasJoinedRef.current = true;
-      console.log("📡 Conectando socket...");
+      console.log("Conectando socket...");
       const socket = connectSocket();
 
-      // ✅ IMPORTANTE: Limpiar listeners ANTES de agregar nuevos
       socket.off("usersOnline");
       socket.off("newMessage");
       socket.off("socketServerError");
 
-      console.log(
-        `🚪 Uniéndose a la reunión ${meetingId} con userId ${userId}`,
-      );
-      socket.emit("newUser", userId, meetingId);
+      console.log(`Uniéndose a la reunión ${meetingId}`);
 
-      // ✅ Configurar listeners
+      // ✅ CORRECTO - Solo meetingId
+      socket.emit("newUser", meetingId);
+
       socket.on(
         "usersOnline",
         (
@@ -111,34 +108,25 @@ const Meeting: React.FC = () => {
           joiningUser: UserWithSocketId | null,
           leavingUser: UserWithSocketId | null,
         ) => {
-          console.log("👥 Usuarios online:", users);
+          console.log("Usuarios online:", users);
           console.log("  - Total participantes:", users.length);
-          console.log(
-            "  - Lista completa:",
-            users.map((u) => ({
-              userId: u.userId,
-              name: u.name,
-              socketId: u.socketId,
-            })),
-          );
-
           setParticipants(users);
 
           if (joiningUser) {
             console.log(
-              `✅ ${joiningUser.name || joiningUser.email || "Usuario"} se unió a la reunión`,
+              `✅ ${joiningUser.name || joiningUser.email || "Usuario"} se unió`,
             );
           }
           if (leavingUser) {
             console.log(
-              `👋 ${leavingUser.name || leavingUser.email || "Usuario"} salió de la reunión`,
+              `👋 ${leavingUser.name || leavingUser.email || "Usuario"} salió`,
             );
           }
         },
       );
 
       socket.on("newMessage", (msg: Message) => {
-        console.log("💬 Nuevo mensaje recibido:", msg);
+        console.log("Nuevo mensaje recibido:", msg);
         setMessages((prev) => {
           const isDuplicate = prev.some(
             (m) =>
@@ -147,7 +135,7 @@ const Meeting: React.FC = () => {
               m.message === msg.message,
           );
           if (isDuplicate) {
-            console.log("⚠️ Mensaje duplicado detectado, ignorando");
+            console.log("Mensaje duplicado detectado");
             return prev;
           }
           return [...prev, msg];
@@ -157,30 +145,28 @@ const Meeting: React.FC = () => {
       socket.on(
         "socketServerError",
         (errorData: { origin: string; message: string }) => {
-          console.error("❌ Error del servidor:", errorData);
+          console.error("Error del servidor:", errorData);
           setError(errorData.message);
         },
       );
 
-      // ✅ Manejar reconexión automática
       socket.on("connect", () => {
-        console.log("🔄 Socket reconectado, volviendo a unirse a la reunión");
-        if (hasJoinedRef.current && meetingId && userId) {
-          socket.emit("newUser", userId, meetingId);
+        console.log("Socket reconectado");
+        if (hasJoinedRef.current && meetingId) {
+          socket.emit("newUser", meetingId);
         }
       });
     };
 
     initializeSocketConnection();
 
-    // ✅ Cleanup mejorado
     return () => {
       if (isCleaningUpRef.current) {
-        console.log("⚠️ Ya se está limpiando, evitando duplicado");
+        console.log("Ya se está limpiando");
         return;
       }
 
-      console.log("🧹 Limpiando componente Meeting");
+      console.log("Limpiando componente");
       isCleaningUpRef.current = true;
       hasJoinedRef.current = false;
 
@@ -192,10 +178,6 @@ const Meeting: React.FC = () => {
         socket.off("connect");
       }
 
-      // ✅ NO desconectar aquí si solo estás navegando
-      // disconnectSocket();
-
-      // Resetear el flag después de un tiempo
       setTimeout(() => {
         isCleaningUpRef.current = false;
       }, 100);
@@ -208,8 +190,8 @@ const Meeting: React.FC = () => {
 
   const handleSendMessage = () => {
     const trimmed = messageInput.trim();
-    if (!trimmed || !meetingId) {
-      console.log("⚠️ Mensaje vacío o sin meetingId");
+    if (!trimmed) {
+      console.log("Mensaje vacío");
       return;
     }
 
@@ -220,8 +202,8 @@ const Meeting: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    console.log("📤 Enviando mensaje:", payload);
-    socket.emit("sendMessage", meetingId, payload);
+    console.log("Enviando mensaje:", payload);
+    socket.emit("sendMessage", payload);
     setMessageInput("");
   };
 
@@ -231,7 +213,6 @@ const Meeting: React.FC = () => {
 
       console.log("🔚 Finalizando llamada...");
 
-      // ✅ Desconectar socket ANTES de navegar
       disconnectSocket();
 
       await request({

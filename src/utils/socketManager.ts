@@ -21,15 +21,21 @@ let socket: Socket | null = null;
  */
 export const getSocket = (): Socket => {
   if (!socket) {
+    const authToken = localStorage.getItem("authToken");
+
     console.log(
       "Creating new socket connection to:",
-      import.meta.env.VITE_SOCKET_URL,
+      import.meta.env.VITE_CHAT_SERVER_URL,
     );
 
-    socket = io(import.meta.env.VITE_SOCKET_URL, {
+    socket = io(import.meta.env.VITE_CHAT_SERVER_URL, {
       autoConnect: false,
       transports: ["websocket", "polling"],
       withCredentials: true,
+
+      auth: {
+        token: authToken,
+      },
 
       reconnection: true,
       reconnectionDelay: 1000,
