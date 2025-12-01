@@ -472,8 +472,9 @@ const Meeting: React.FC = () => {
       <div className="bottom-controls">
         <button
           className={`control-btn ${!isMicOn ? "disabled" : ""}`}
-          onClick={() => setIsMicOn(!isMicOn)}
-          title="Micrófono"
+          onClick={handleToggleMic}
+          title={isMicOn ? "Silenciar micrófono" : "Activar micrófono"}
+          disabled={!isAudioReady}
         >
           <img src={micro} alt="Micrófono" />
         </button>
@@ -488,8 +489,8 @@ const Meeting: React.FC = () => {
 
         <button
           className={`control-btn ${!isCameraOn ? "disabled" : ""}`}
-          onClick={() => setIsCameraOn(!isCameraOn)}
-          title="Cámara"
+          onClick={handleToggleCamera}
+          title={isCameraOn ? "Desactivar cámara" : "Activar cámara"}
         >
           <img src={camera} alt="Cámara" />
         </button>
