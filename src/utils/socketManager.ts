@@ -1,28 +1,9 @@
-/**
- * @fileoverview This module manages a singleton Socket.IO client connection.
- * It provides utility functions to initialize, connect, and disconnect a WebSocket
- * connection with proper configurations such as transport order and credentials.
- */
-
 import { io, Socket } from "socket.io-client";
 
-/**
- * Cached instance of the Socket.IO client to maintain a single connection.
- * @type {Socket | null}
- */
 let socket: Socket | null = null;
 
-/**
- * Retrieves the singleton instance of the Socket.IO client.
- * If no socket connection exists, a new one is created and configured.
- *
- * @function
- * @returns {Socket} The initialized Socket.IO client instance.
- */
 export const getSocket = (): Socket => {
   if (!socket) {
-    const authToken = localStorage.getItem("authToken");
-
     console.log(
       "Creating new socket connection to:",
       import.meta.env.VITE_CHAT_SERVER_URL,
@@ -30,19 +11,16 @@ export const getSocket = (): Socket => {
 
     socket = io(import.meta.env.VITE_CHAT_SERVER_URL, {
       autoConnect: false,
-      transports: ["websocket", "polling"],
-      withCredentials: true,
-
-      auth: {
-        token: authToken,
-      },
+      transports: ["polling", "websocket"],
+      withCredentials: false,
 
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 10,
+      timeout: 20000,
     });
 
-    // Debugging events
     socket.on("connect", () => {
       console.log("Socket connected:", socket?.id);
     });
@@ -59,16 +37,22 @@ export const getSocket = (): Socket => {
     socket.on("reconnect", (attemptNumber) => {
       console.log("Socket reconnected after", attemptNumber, "attempts");
     });
+
+    socket.on("reconnect_attempt", (attemptNumber) => {
+      console.log("Reconnection attempt:", attemptNumber);
+    });
+
+    socket.on("reconnect_error", (error) => {
+      console.error("Reconnection error:", error.message);
+    });
+
+    socket.on("reconnect_failed", () => {
+      console.error("Reconnection failed after all attempts");
+    });
   }
   return socket;
 };
 
-/**
- * Establishes the socket connection if it is not already connected.
- *
- * @function
- * @returns {Socket} The connected Socket.IO client instance.
- */
 export const connectSocket = (): Socket => {
   const socket = getSocket();
   if (!socket.connected) {
@@ -80,20 +64,13 @@ export const connectSocket = (): Socket => {
   return socket;
 };
 
-/**
- * Disconnects the active socket connection and clears its reference.
-
- *
- * @function
- * @returns {void}
- */
 export const disconnectSocket = (): void => {
   if (socket) {
     console.log("Cleaning up socket...");
 
     socket.off("usersOnline");
     socket.off("newMessage");
-    socket.off("socketServerError");
+    socket.off("chatServerError");
 
     if (socket.connected) {
       console.log("Disconnecting socket:", socket.id);
