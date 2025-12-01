@@ -12,6 +12,13 @@ import {
   getSocket,
 } from "../utils/socketManager";
 import { request } from "../utils/request";
+import {
+  initMeetAudio,
+  connectToUserAudio,
+  toggleMicrophone,
+  leaveMeetAudio,
+  getMicrophoneState,
+} from "../utils/audio";
 
 type Message = {
   userId: string;
@@ -32,7 +39,9 @@ const Meeting: React.FC = () => {
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasJoinedRef = useRef(false);
-  const isCleaningUpRef = useRef(false); // ✅ Prevenir doble limpieza
+  const isCleaningUpRef = useRef(false);
+  const audioInitializedRef = useRef(false);
+  const connectedPeersRef = useRef<Set<string>>(new Set());
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
@@ -44,20 +53,21 @@ const Meeting: React.FC = () => {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [isAudioReady, setIsAudioReady] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     const userEmail = localStorage.getItem("userEmail");
     const authToken = localStorage.getItem("authToken");
 
-    console.log("🔍 DEBUG localStorage en Meeting:");
+    console.log("DEBUG localStorage en Meeting:");
     console.log("  - userId:", userId);
     console.log("  - userEmail:", userEmail);
-    console.log("  - authToken:", authToken ? "✅ Existe" : "❌ No existe");
+    console.log("  - authToken:", authToken ? "Existe" : "No existe");
     console.log("  - meetingId:", meetingId);
 
     if (!userId) {
-      console.error("❌ No hay userId en localStorage");
+      console.error("No hay userId en localStorage");
       setError(
         "No se encontró información del usuario. Por favor, visita tu perfil primero.",
       );
@@ -74,6 +84,15 @@ const Meeting: React.FC = () => {
       return;
     }
 
+    if (!authToken) {
+      console.error("No hay authToken en localStorage");
+      setError(
+        "No se encontró el token de autenticación. Por favor, inicia sesión nuevamente.",
+      );
+      navigate("/login");
+      return;
+    }
+
     setCurrentUserId(userId);
 
     if (!meetingId) {
@@ -82,28 +101,51 @@ const Meeting: React.FC = () => {
       return;
     }
 
-    // ✅ Resetear el flag cuando se monta el componente
     if (hasJoinedRef.current) {
-      console.log("⚠️ Ya se ha unido a la reunión, evitando duplicado");
+      console.log("Ya se ha unido a la reunión, evitando duplicado");
       return;
     }
 
-    const initializeSocketConnection = () => {
+    const initializeSocketConnection = async () => {
       hasJoinedRef.current = true;
-      console.log("📡 Conectando socket...");
+      console.log("Conectando socket...");
       const socket = connectSocket();
 
-      // ✅ IMPORTANTE: Limpiar listeners ANTES de agregar nuevos
-      socket.off("usersOnline");
-      socket.off("newMessage");
-      socket.off("socketServerError");
+      if (!socket.connected) {
+        await new Promise<void>((resolve) => {
+          socket.once("connect", () => {
+            console.log("Socket conectado:", socket.id);
+            resolve();
+          });
+        });
+      }
 
-      console.log(
-        `🚪 Uniéndose a la reunión ${meetingId} con userId ${userId}`,
-      );
-      socket.emit("newUser", userId, meetingId);
+      console.log(`Uniéndose a la reunión ${meetingId} con userId ${userId}`);
 
-      // ✅ Configurar listeners
+      try {
+        const response = await request<UserWithSocketId[]>({
+          method: "PUT",
+          endpoint: `/api/meetings/updateOrAddMeetingUser/${meetingId}`,
+          data: { userId, socketId: socket.id },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+
+        console.log("Usuario registrado en el backend:", response);
+
+        if (Array.isArray(response)) {
+          setParticipants(response);
+        }
+
+        socket.emit("newUser", authToken, userId, meetingId);
+      } catch (error) {
+        console.error("Error registrando usuario en backend:", error);
+        setError("No se pudo unir a la reunión. Intenta nuevamente.");
+        return;
+      }
+
       socket.on(
         "usersOnline",
         (
@@ -111,7 +153,7 @@ const Meeting: React.FC = () => {
           joiningUser: UserWithSocketId | null,
           leavingUser: UserWithSocketId | null,
         ) => {
-          console.log("👥 Usuarios online:", users);
+          console.log("Usuarios online:", users);
           console.log("  - Total participantes:", users.length);
           console.log(
             "  - Lista completa:",
@@ -126,19 +168,19 @@ const Meeting: React.FC = () => {
 
           if (joiningUser) {
             console.log(
-              `✅ ${joiningUser.name || joiningUser.email || "Usuario"} se unió a la reunión`,
+              ` ${joiningUser.name || joiningUser.email || "Usuario"} se unió a la reunión`,
             );
           }
           if (leavingUser) {
             console.log(
-              `👋 ${leavingUser.name || leavingUser.email || "Usuario"} salió de la reunión`,
+              ` ${leavingUser.name || leavingUser.email || "Usuario"} salió de la reunión`,
             );
           }
         },
       );
 
       socket.on("newMessage", (msg: Message) => {
-        console.log("💬 Nuevo mensaje recibido:", msg);
+        console.log("Nuevo mensaje recibido:", msg);
         setMessages((prev) => {
           const isDuplicate = prev.some(
             (m) =>
@@ -147,7 +189,7 @@ const Meeting: React.FC = () => {
               m.message === msg.message,
           );
           if (isDuplicate) {
-            console.log("⚠️ Mensaje duplicado detectado, ignorando");
+            console.log("Mensaje duplicado detectado, ignorando");
             return prev;
           }
           return [...prev, msg];
@@ -155,32 +197,56 @@ const Meeting: React.FC = () => {
       });
 
       socket.on(
-        "socketServerError",
+        "chatServerError",
         (errorData: { origin: string; message: string }) => {
-          console.error("❌ Error del servidor:", errorData);
+          console.error("Error del servidor de chat:", errorData);
           setError(errorData.message);
         },
       );
 
-      // ✅ Manejar reconexión automática
-      socket.on("connect", () => {
-        console.log("🔄 Socket reconectado, volviendo a unirse a la reunión");
-        if (hasJoinedRef.current && meetingId && userId) {
-          socket.emit("newUser", userId, meetingId);
+      console.log("Verificando listeners registrados:");
+      console.log("  - newMessage:", socket.listeners("newMessage").length);
+      console.log("  - usersOnline:", socket.listeners("usersOnline").length);
+      console.log(
+        "  - chatServerError:",
+        socket.listeners("chatServerError").length,
+      );
+
+      socket.on("connect", async () => {
+        console.log("Socket reconectado, volviendo a unirse a la reunión");
+        if (hasJoinedRef.current && meetingId && userId && authToken) {
+          try {
+            const response = await request({
+              method: "PUT",
+              endpoint: `/api/meetings/updateOrAddMeetingUser/${meetingId}`,
+              data: { userId, socketId: socket.id },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`,
+              },
+            });
+
+            if (Array.isArray(response)) {
+              setParticipants(response);
+            }
+
+            socket.emit("newUser", authToken, userId, meetingId);
+          } catch (error) {
+            console.error("❌ Error en reconexión:", error);
+          }
         }
       });
     };
 
     initializeSocketConnection();
 
-    // ✅ Cleanup mejorado
     return () => {
       if (isCleaningUpRef.current) {
-        console.log("⚠️ Ya se está limpiando, evitando duplicado");
+        console.log("Ya se está limpiando, evitando duplicado");
         return;
       }
 
-      console.log("🧹 Limpiando componente Meeting");
+      console.log("Limpiando componente Meeting");
       isCleaningUpRef.current = true;
       hasJoinedRef.current = false;
 
@@ -188,14 +254,10 @@ const Meeting: React.FC = () => {
       if (socket) {
         socket.off("usersOnline");
         socket.off("newMessage");
-        socket.off("socketServerError");
+        socket.off("chatServerError");
         socket.off("connect");
       }
 
-      // ✅ NO desconectar aquí si solo estás navegando
-      // disconnectSocket();
-
-      // Resetear el flag después de un tiempo
       setTimeout(() => {
         isCleaningUpRef.current = false;
       }, 100);
@@ -203,13 +265,85 @@ const Meeting: React.FC = () => {
   }, [meetingId, navigate]);
 
   useEffect(() => {
+    if (!currentUserId || !meetingId || audioInitializedRef.current) {
+      return;
+    }
+
+    const initAudio = async () => {
+      try {
+        console.log("Inicializando sistema de audio...");
+        await initMeetAudio(meetingId, currentUserId);
+        audioInitializedRef.current = true;
+        setIsAudioReady(true);
+        console.log("Audio inicializado correctamente");
+
+        // Sincronizar estado del micrófono
+        const micState = getMicrophoneState();
+        setIsMicOn(micState);
+      } catch (error) {
+        console.error("Error inicializando audio:", error);
+        setError(
+          "No se pudo inicializar el audio. Verifica los permisos del micrófono.",
+        );
+      }
+    };
+
+    initAudio();
+
+    return () => {
+      if (audioInitializedRef.current) {
+        console.log("Limpiando audio...");
+        leaveMeetAudio();
+        audioInitializedRef.current = false;
+        setIsAudioReady(false);
+        connectedPeersRef.current.clear();
+      }
+    };
+  }, [currentUserId, meetingId]);
+
+  useEffect(() => {
+    if (!isAudioReady || !meetingId || !currentUserId) {
+      return;
+    }
+
+    participants.forEach((user) => {
+      if (user.userId === currentUserId) {
+        return;
+      }
+
+      const peerId = `${meetingId}-${user.userId}`;
+
+      if (connectedPeersRef.current.has(user.userId)) {
+        console.log(`Ya conectado con ${user.name || user.userId}`);
+        return;
+      }
+
+      console.log(`Conectando al audio de: ${user.name || user.userId}`);
+      const call = connectToUserAudio(peerId, user.userId);
+
+      if (call) {
+        connectedPeersRef.current.add(user.userId);
+        console.log(`Conexión establecida con: ${user.name || user.userId}`);
+      }
+    });
+
+    const currentUserIds = new Set(participants.map((p) => p.userId));
+    connectedPeersRef.current.forEach((userId) => {
+      if (!currentUserIds.has(userId)) {
+        console.log(`Usuario ${userId} salió, limpiando conexión`);
+        connectedPeersRef.current.delete(userId);
+      }
+    });
+  }, [participants, isAudioReady, meetingId, currentUserId]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = () => {
     const trimmed = messageInput.trim();
-    if (!trimmed || !meetingId) {
-      console.log("⚠️ Mensaje vacío o sin meetingId");
+    if (!trimmed) {
+      console.log("Mensaje vacío");
       return;
     }
 
@@ -220,8 +354,8 @@ const Meeting: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    console.log("📤 Enviando mensaje:", payload);
-    socket.emit("sendMessage", meetingId, payload);
+    console.log("Enviando mensaje:", payload);
+    socket.emit("sendMessage", payload);
     setMessageInput("");
   };
 
@@ -229,21 +363,48 @@ const Meeting: React.FC = () => {
     try {
       if (!meetingId) return;
 
-      console.log("🔚 Finalizando llamada...");
+      console.log("Finalizando llamada...");
 
-      // ✅ Desconectar socket ANTES de navegar
+      const authToken = localStorage.getItem("authToken");
+      const socket = getSocket();
+
+      if (audioInitializedRef.current) {
+        leaveMeetAudio();
+        audioInitializedRef.current = false;
+      }
+
+      try {
+        await request({
+          method: "PUT",
+          endpoint: `/api/meetings/removeUser/${meetingId}`,
+          data: { userId: currentUserId, socketId: socket.id },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+        console.log("Usuario removido de la reunión");
+      } catch (error) {
+        console.error("Error removiendo usuario:", error);
+      }
+
       disconnectSocket();
 
-      await request({
-        method: "PUT",
-        endpoint: `/api/meetings/finish/${meetingId}`,
-        headers: { "Content-Type": "application/json" },
-      });
+      //Solo finalizar la reunión si eres el host/último usuario
+      // await request({
+      //   method: "PUT",
+      //   endpoint: `/api/meetings/finish/${meetingId}`,
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Authorization: `Bearer ${authToken}`,
+      //   },
+      // });
 
-      console.log("✅ Llamada finalizada");
+      console.log("Salida exitosa de la reunión");
       navigate("/dashboard");
     } catch (error) {
-      console.error("❌ Error finalizando la reunión:", error);
+      console.error("Error saliendo de la reunión:", error);
+
       navigate("/dashboard");
     }
   };
@@ -254,6 +415,22 @@ const Meeting: React.FC = () => {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
+  };
+
+  const handleToggleMic = () => {
+    if (!isAudioReady) {
+      console.warn("Audio no está listo");
+      return;
+    }
+
+    const newState = toggleMicrophone(isMicOn);
+    setIsMicOn(newState);
+    console.log(` Micrófono ${newState ? "activado" : "silenciado"}`);
+  };
+
+  const handleToggleCamera = () => {
+    setIsCameraOn(!isCameraOn);
+    console.log(`Cámara ${!isCameraOn ? "activada" : "desactivada"}`);
   };
 
   const toggleChat = () => {
@@ -295,8 +472,9 @@ const Meeting: React.FC = () => {
       <div className="bottom-controls">
         <button
           className={`control-btn ${!isMicOn ? "disabled" : ""}`}
-          onClick={() => setIsMicOn(!isMicOn)}
-          title="Micrófono"
+          onClick={handleToggleMic}
+          title={isMicOn ? "Silenciar micrófono" : "Activar micrófono"}
+          disabled={!isAudioReady}
         >
           <img src={micro} alt="Micrófono" />
         </button>
@@ -311,8 +489,8 @@ const Meeting: React.FC = () => {
 
         <button
           className={`control-btn ${!isCameraOn ? "disabled" : ""}`}
-          onClick={() => setIsCameraOn(!isCameraOn)}
-          title="Cámara"
+          onClick={handleToggleCamera}
+          title={isCameraOn ? "Desactivar cámara" : "Activar cámara"}
         >
           <img src={camera} alt="Cámara" />
         </button>
