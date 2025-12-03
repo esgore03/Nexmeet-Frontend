@@ -77,6 +77,8 @@ const Meeting: React.FC = () => {
   const [aiSummary, setAiSummary] = useState<string>("");
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [showEndMeetingModal, setShowEndMeetingModal] = useState(false);
+  const showingSummaryRef = useRef(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -264,7 +266,12 @@ const Meeting: React.FC = () => {
         },
       );
       socket.on("meetingEnded", () => {
-        console.log("Reunión finalizada por el anfitrión");
+        if (showingSummaryRef.current || currentUserId === meetingCreatorId) {
+          console.log("Ignorando meetingEnded");
+          return;
+        }
+
+        console.log("Cerrando vista de participante...");
 
         if (audioInitializedRef.current) {
           leaveMeetAudio();
@@ -272,7 +279,6 @@ const Meeting: React.FC = () => {
         }
 
         disconnectSocket();
-
         setShowEndMeetingModal(true);
       });
 
@@ -528,45 +534,47 @@ const Meeting: React.FC = () => {
     try {
       if (!meetingId) return;
 
-      console.log("Finalizando reunión para todos...");
+      console.log("Finalizando reunión...");
 
       const authToken = localStorage.getItem("authToken");
       const socket = getSocket();
-
-      socket.emit("endMeeting", meetingId);
-      console.log("Notificación enviada a todos los participantes");
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (audioInitializedRef.current) {
         leaveMeetAudio();
         audioInitializedRef.current = false;
       }
 
-      const response = await request<{ message: string; ai_summary: string }>({
-        method: "PUT",
-        endpoint: `/api/meetings/finish/${meetingId}`,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+      let summary = "No se pudo generar un resumen.";
 
-      console.log("Reunión finalizada en el backend");
-      console.log("Resumen recibido:", response);
+      try {
+        const response = await request<{ message: string; ai_summary: string }>(
+          {
+            method: "PUT",
+            endpoint: `/api/meetings/finish/${meetingId}`,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          },
+        );
 
-      if (response && response.ai_summary) {
-        setAiSummary(response.ai_summary);
-        setShowSummaryModal(true);
-      } else {
-        console.warn("No se recibió resumen de la IA");
-        disconnectSocket();
-        navigate("/dashboard");
+        if (response?.ai_summary) {
+          summary = response.ai_summary;
+        }
+      } catch (error) {
+        console.error("Error obteniendo resumen:", error);
       }
 
+      showingSummaryRef.current = true;
+
+      socket.emit("endMeeting", meetingId);
+      console.log("Notificación enviada");
+
+      setAiSummary(summary);
+      setShowSummaryModal(true);
       setShowEndMeetingConfirm(false);
     } catch (error) {
-      console.error("Error finalizando la reunión:", error);
+      console.error("Error crítico:", error);
       disconnectSocket();
       navigate("/dashboard");
     }
@@ -655,7 +663,14 @@ const Meeting: React.FC = () => {
           </div>
         </div>
       )}
-
+      {showCopyToast && (
+        <div className="toast-notification copy-toast">
+          <div className="toast-content">
+            <span className="toast-icon">📋</span>
+            <span className="toast-text">Resumen copiado al portapapeles</span>
+          </div>
+        </div>
+      )}
       {showEndMeetingConfirm && (
         <div
           className="modal-overlay"
@@ -791,6 +806,7 @@ const Meeting: React.FC = () => {
           className="modal-overlay"
           onClick={() => {
             setShowSummaryModal(false);
+            showingSummaryRef.current = false; // ✅ Resetear
             disconnectSocket();
             navigate("/dashboard");
           }}
@@ -818,7 +834,8 @@ const Meeting: React.FC = () => {
                 className="modal-btn secondary"
                 onClick={() => {
                   navigator.clipboard.writeText(aiSummary);
-                  alert("Resumen copiado al portapapeles");
+                  setShowCopyToast(true);
+                  setTimeout(() => setShowCopyToast(false), 3000);
                 }}
               >
                 Copiar resumen
