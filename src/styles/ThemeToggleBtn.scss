@@ -3,6 +3,13 @@
     background: none;
     border: none;
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @media (max-width: 768px) {
+        padding: 4px;
+    }
 }
 
 .theme-toggle-icon {
@@ -11,4 +18,21 @@
     padding: 6px;
     border: 1px solid #6b7280;
     border-radius: 9999px;
+    transition: transform 0.2s ease;
+
+    @media (max-width: 768px) {
+        width: 18px;
+        height: 18px;
+        padding: 5px;
+    }
+
+    @media (max-width: 480px) {
+        width: 16px;
+        height: 16px;
+        padding: 4px;
+    }
+
+    &:hover {
+        transform: scale(1.1);
+    }
 }

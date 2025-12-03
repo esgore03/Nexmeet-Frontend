@@ -94,13 +94,15 @@ const Dashboard: React.FC = () => {
     navigate(`/meeting/${joinId.trim()}`);
   };
 
+
   return (
     <section className="dashboard" aria-live="polite">
       <UserNavbar />
 
       <div className="dashboard__content">
         <div className="dashboard__text-wrapper">
-          <h1 className="dashboard__title">Bienvenido a tu panel Nexmeet</h1>
+          <h1 className="dashboard__title">Bienvenido a tu panel NexMeet</h1>
+
           <p className="dashboard__subtitle">
             Gestiona tus reuniones, conéctate con otros usuarios y organiza tu
             tiempo fácilmente.
@@ -148,6 +150,7 @@ const Dashboard: React.FC = () => {
               </p>
             )}
           </div>
+
         </div>
 
         <div className="dashboard__image-wrapper">
