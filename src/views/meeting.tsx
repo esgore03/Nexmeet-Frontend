@@ -234,7 +234,7 @@ const Meeting: React.FC = () => {
           setError(errorData.message);
         },
       );
-      socket.on("meetingEnded", (data: { message: string }) => {
+      socket.on("meetingEnded", () => {
         console.log("Reunión finalizada por el anfitrión");
 
         if (audioInitializedRef.current) {
