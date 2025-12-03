@@ -54,6 +54,11 @@ const Meeting: React.FC = () => {
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
+  const [meetingCreatorId, setMeetingCreatorId] = useState<string | null>(null);
+  const [showEndMeetingConfirm, setShowEndMeetingConfirm] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [showEndMeetingModal, setShowEndMeetingModal] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -105,6 +110,32 @@ const Meeting: React.FC = () => {
       console.log("Ya se ha unido a la reunión, evitando duplicado");
       return;
     }
+
+    const fetchMeetingInfo = async () => {
+      try {
+        const meetingData = await request<{ userId: string }>({
+          method: "GET",
+          endpoint: `/api/meetings/${meetingId}`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+
+        if (
+          meetingData &&
+          typeof meetingData === "object" &&
+          "userId" in meetingData
+        ) {
+          setMeetingCreatorId(meetingData.userId || null);
+          console.log("Creador de la reunión:", meetingData.userId);
+        }
+      } catch (error) {
+        console.error("Error obteniendo info de la reunión:", error);
+      }
+    };
+
+    fetchMeetingInfo();
 
     const initializeSocketConnection = async () => {
       hasJoinedRef.current = true;
@@ -203,7 +234,20 @@ const Meeting: React.FC = () => {
           setError(errorData.message);
         },
       );
+      socket.on("meetingEnded", () => {
+        console.log("Reunión finalizada por el anfitrión");
 
+        if (audioInitializedRef.current) {
+          leaveMeetAudio();
+          audioInitializedRef.current = false;
+        }
+
+        disconnectSocket();
+
+        setShowEndMeetingModal(true);
+      });
+
+      console.log("Verificando listeners registrados:");
       console.log("Verificando listeners registrados:");
       console.log("  - newMessage:", socket.listeners("newMessage").length);
       console.log("  - usersOnline:", socket.listeners("usersOnline").length);
@@ -255,6 +299,7 @@ const Meeting: React.FC = () => {
         socket.off("usersOnline");
         socket.off("newMessage");
         socket.off("chatServerError");
+        socket.off("meetingEnded");
         socket.off("connect");
       }
 
@@ -277,7 +322,6 @@ const Meeting: React.FC = () => {
         setIsAudioReady(true);
         console.log("Audio inicializado correctamente");
 
-        // Sincronizar estado del micrófono
         const micState = getMicrophoneState();
         setIsMicOn(micState);
       } catch (error) {
@@ -340,7 +384,7 @@ const Meeting: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     const trimmed = messageInput.trim();
     if (!trimmed) {
       console.log("Mensaje vacío");
@@ -348,6 +392,11 @@ const Meeting: React.FC = () => {
     }
 
     const socket = getSocket();
+    const authToken = localStorage.getItem("authToken");
+
+    const currentUser = participants.find((p) => p.userId === currentUserId);
+    const userName = currentUser?.name || currentUser?.email || "Usuario";
+
     const payload = {
       userId: currentUserId,
       message: trimmed,
@@ -355,15 +404,39 @@ const Meeting: React.FC = () => {
     };
 
     console.log("Enviando mensaje:", payload);
+
     socket.emit("sendMessage", payload);
     setMessageInput("");
+
+    try {
+      const response = await request({
+        method: "PUT",
+        endpoint: "/api/chats/saveMessage",
+        data: {
+          meetId: meetingId,
+          message: {
+            name: userName,
+            message: trimmed,
+            timestamp: payload.timestamp,
+          },
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      console.log("Mensaje guardado en BD:", response);
+    } catch (error) {
+      console.error("Error guardando mensaje:", error);
+    }
   };
 
-  const handleEndCall = async () => {
+  const handleLeaveCall = async () => {
     try {
       if (!meetingId) return;
 
-      console.log("Finalizando llamada...");
+      console.log("🚪 Saliendo de la llamada...");
 
       const authToken = localStorage.getItem("authToken");
       const socket = getSocket();
@@ -390,21 +463,58 @@ const Meeting: React.FC = () => {
 
       disconnectSocket();
 
-      //Solo finalizar la reunión si eres el host/último usuario
-      // await request({
-      //   method: "PUT",
-      //   endpoint: `/api/meetings/finish/${meetingId}`,
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${authToken}`,
-      //   },
-      // });
-
       console.log("Salida exitosa de la reunión");
       navigate("/dashboard");
     } catch (error) {
       console.error("Error saliendo de la reunión:", error);
+      navigate("/dashboard");
+    }
+  };
 
+  const handleEndMeeting = async () => {
+    try {
+      if (!meetingId) return;
+
+      console.log("Finalizando reunión para todos...");
+
+      const authToken = localStorage.getItem("authToken");
+      const socket = getSocket();
+
+      socket.emit("endMeeting", meetingId);
+      console.log("Notificación enviada a todos los participantes");
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      if (audioInitializedRef.current) {
+        leaveMeetAudio();
+        audioInitializedRef.current = false;
+      }
+
+      const response = await request<{ message: string; ai_summary: string }>({
+        method: "PUT",
+        endpoint: `/api/meetings/finish/${meetingId}`,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      console.log("Reunión finalizada en el backend");
+      console.log("Resumen recibido:", response);
+
+      if (response && response.ai_summary) {
+        setAiSummary(response.ai_summary);
+        setShowSummaryModal(true);
+      } else {
+        console.warn("No se recibió resumen de la IA");
+        disconnectSocket();
+        navigate("/dashboard");
+      }
+
+      setShowEndMeetingConfirm(false);
+    } catch (error) {
+      console.error("Error finalizando la reunión:", error);
+      disconnectSocket();
       navigate("/dashboard");
     }
   };
@@ -443,6 +553,8 @@ const Meeting: React.FC = () => {
     setIsChatOpen(false);
   };
 
+  const isCreator = currentUserId === meetingCreatorId;
+
   return (
     <div className="video-call">
       <div className="video-container">
@@ -469,6 +581,29 @@ const Meeting: React.FC = () => {
         </div>
       )}
 
+      {showEndMeetingConfirm && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowEndMeetingConfirm(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>¿Finalizar reunión para todos?</h3>
+            <p>Esta acción cerrará la reunión para todos los participantes.</p>
+            <div className="modal-buttons">
+              <button
+                className="modal-btn cancel"
+                onClick={() => setShowEndMeetingConfirm(false)}
+              >
+                Cancelar
+              </button>
+              <button className="modal-btn confirm" onClick={handleEndMeeting}>
+                Finalizar para todos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bottom-controls">
         <button
           className={`control-btn ${!isMicOn ? "disabled" : ""}`}
@@ -480,12 +615,22 @@ const Meeting: React.FC = () => {
         </button>
 
         <button
-          className="control-btn end-call"
-          onClick={handleEndCall}
-          title="Finalizar llamada"
+          className="control-btn leave-call"
+          onClick={handleLeaveCall}
+          title="Salir de la llamada"
         >
-          <img src={end_call} alt="Finalizar llamada" />
+          <img src={end_call} alt="Salir" />
         </button>
+
+        {isCreator && (
+          <button
+            className="end-meeting-btn"
+            onClick={() => setShowEndMeetingConfirm(true)}
+            title="Finalizar reunión para todos"
+          >
+            <span className="end-text">Finalizar Reunión</span>
+          </button>
+        )}
 
         <button
           className={`control-btn ${!isCameraOn ? "disabled" : ""}`}
@@ -566,6 +711,72 @@ const Meeting: React.FC = () => {
         </div>
       </div>
 
+      {showSummaryModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setShowSummaryModal(false);
+            disconnectSocket();
+            navigate("/dashboard");
+          }}
+        >
+          <div
+            className="modal-content summary-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>📋 Resumen de la Reunión</h3>
+            <div className="summary-content">
+              <pre>{aiSummary}</pre>
+            </div>
+            <div className="modal-buttons">
+              <button
+                className="modal-btn confirm"
+                onClick={() => {
+                  setShowSummaryModal(false);
+                  disconnectSocket();
+                  navigate("/dashboard");
+                }}
+              >
+                Cerrar y volver al Dashboard
+              </button>
+              <button
+                className="modal-btn secondary"
+                onClick={() => {
+                  navigator.clipboard.writeText(aiSummary);
+                  alert("Resumen copiado al portapapeles");
+                }}
+              >
+                Copiar resumen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showEndMeetingModal && (
+        <div className="modal-overlay end-meeting-overlay">
+          <div className="modal-content end-meeting-modal">
+            <div className="modal-icon">
+              <span>📞</span>
+            </div>
+            <h3>Reunión Finalizada</h3>
+            <p>El anfitrión ha finalizado esta reunión.</p>
+            <p className="subtext">
+              Serás redirigido al dashboard en un momento...
+            </p>
+            <div className="modal-buttons">
+              <button
+                className="modal-btn confirm"
+                onClick={() => {
+                  setShowEndMeetingModal(false);
+                  navigate("/dashboard");
+                }}
+              >
+                Ir al Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className={`participants-panel ${isParticipantsOpen ? "open" : ""}`}>
         <div className="panel-header">
           <h3>Participantes ({participants.length})</h3>
