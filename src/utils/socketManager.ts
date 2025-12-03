@@ -1,7 +1,15 @@
 import { io, Socket } from "socket.io-client";
-
+/**
+ * Socket.IO client instance singleton
+ * @type {Socket | null}
+ */
 let socket: Socket | null = null;
-
+/**
+ * Gets the socket instance, creating it if it doesn't exist
+ * Configures socket with connection options, event listeners, and reconnection logic
+ * @function getSocket
+ * @returns {Socket} The Socket.IO client instance
+ */
 export const getSocket = (): Socket => {
   if (!socket) {
     console.log(
@@ -52,7 +60,12 @@ export const getSocket = (): Socket => {
   }
   return socket;
 };
-
+/**
+ * Connects the socket if not already connected
+ * Gets or creates the socket instance and initiates connection
+ * @function connectSocket
+ * @returns {Socket} The connected Socket.IO client instance
+ */
 export const connectSocket = (): Socket => {
   const socket = getSocket();
   if (!socket.connected) {
@@ -63,7 +76,12 @@ export const connectSocket = (): Socket => {
   }
   return socket;
 };
-
+/**
+ * Disconnects the socket and removes specific event listeners
+ * Cleans up listeners for usersOnline, newMessage, and chatServerError events
+ * @function disconnectSocket
+ * @returns {void}
+ */
 export const disconnectSocket = (): void => {
   if (socket) {
     console.log("Cleaning up socket...");
@@ -78,7 +96,12 @@ export const disconnectSocket = (): void => {
     }
   }
 };
-
+/**
+ * Completely resets the socket instance
+ * Removes all listeners, disconnects the socket, and sets the instance to null
+ * @function resetSocket
+ * @returns {void}
+ */
 export const resetSocket = (): void => {
   if (socket) {
     console.log("Resetting socket completely...");
