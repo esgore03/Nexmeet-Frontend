@@ -19,13 +19,27 @@ import {
   leaveMeetAudio,
   getMicrophoneState,
 } from "../utils/audio";
-
+/**
+ * Represents a chat message in the meeting
+ * @typedef {Object} Message
+ * @property {string} userId - The ID of the user who sent the message
+ * @property {string} message - The message content
+ * @property {string} timestamp - ISO string timestamp of when the message was sent
+ */
 type Message = {
   userId: string;
   message: string;
   timestamp: string;
 };
-
+/**
+ * Represents a user in the meeting with their socket connection information
+ * @typedef {Object} UserWithSocketId
+ * @property {string} userId - The user's unique identifier
+ * @property {string} socketId - The user's socket connection ID
+ * @property {string | null} [name] - The user's display name (optional)
+ * @property {string | null} [email] - The user's email address (optional)
+ * @property {string | null} [photoURL] - URL to the user's profile photo (optional)
+ */
 type UserWithSocketId = {
   userId: string;
   socketId: string;
@@ -33,7 +47,11 @@ type UserWithSocketId = {
   email?: string | null;
   photoURL?: string | null;
 };
-
+/**
+ * Meeting component - Main component for video call meetings with chat, participants, and audio functionality
+ * @component
+ * @returns {JSX.Element} The rendered Meeting component
+ */
 const Meeting: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
@@ -110,7 +128,12 @@ const Meeting: React.FC = () => {
       console.log("Ya se ha unido a la reunión, evitando duplicado");
       return;
     }
-
+    /**
+     * Fetches meeting information from the backend
+     * @async
+     * @function fetchMeetingInfo
+     * @returns {Promise<void>}
+     */
     const fetchMeetingInfo = async () => {
       try {
         const meetingData = await request<{ userId: string }>({
@@ -136,7 +159,13 @@ const Meeting: React.FC = () => {
     };
 
     fetchMeetingInfo();
-
+    /**
+     * Initializes the socket connection and registers the user in the meeting
+     * Sets up socket event listeners for real-time communication
+     * @async
+     * @function initializeSocketConnection
+     * @returns {Promise<void>}
+     */
     const initializeSocketConnection = async () => {
       hasJoinedRef.current = true;
       console.log("Conectando socket...");
@@ -313,7 +342,13 @@ const Meeting: React.FC = () => {
     if (!currentUserId || !meetingId || audioInitializedRef.current) {
       return;
     }
-
+    /**
+     * Initializes the audio system for the meeting
+     * Requests microphone permissions and sets up peer-to-peer audio connections
+     * @async
+     * @function initAudio
+     * @returns {Promise<void>}
+     */
     const initAudio = async () => {
       try {
         console.log("Inicializando sistema de audio...");
@@ -383,7 +418,13 @@ const Meeting: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
+  /**
+   * Handles sending a chat message
+   * Emits the message through socket and saves it to the database
+   * @async
+   * @function handleSendMessage
+   * @returns {Promise<void>}
+   */
   const handleSendMessage = async () => {
     const trimmed = messageInput.trim();
     if (!trimmed) {
@@ -431,7 +472,13 @@ const Meeting: React.FC = () => {
       console.error("Error guardando mensaje:", error);
     }
   };
-
+  /**
+   * Handles leaving the call for the current user
+   * Cleans up audio connections, removes user from backend, and disconnects socket
+   * @async
+   * @function handleLeaveCall
+   * @returns {Promise<void>}
+   */
   const handleLeaveCall = async () => {
     try {
       if (!meetingId) return;
@@ -470,7 +517,13 @@ const Meeting: React.FC = () => {
       navigate("/dashboard");
     }
   };
-
+  /**
+   * Handles ending the meeting for all participants (host only)
+   * Notifies all users, finishes the meeting in backend, and displays AI summary
+   * @async
+   * @function handleEndMeeting
+   * @returns {Promise<void>}
+   */
   const handleEndMeeting = async () => {
     try {
       if (!meetingId) return;
@@ -518,7 +571,11 @@ const Meeting: React.FC = () => {
       navigate("/dashboard");
     }
   };
-
+  /**
+   * Copies the meeting ID to the clipboard and shows a toast notification
+   * @function copyMeetingId
+   * @returns {void}
+   */
   const copyMeetingId = () => {
     if (meetingId) {
       navigator.clipboard.writeText(meetingId);
@@ -526,7 +583,11 @@ const Meeting: React.FC = () => {
       setTimeout(() => setShowToast(false), 3000);
     }
   };
-
+  /**
+   * Toggles the microphone on/off state
+   * @function handleToggleMic
+   * @returns {void}
+   */
   const handleToggleMic = () => {
     if (!isAudioReady) {
       console.warn("Audio no está listo");
@@ -537,17 +598,31 @@ const Meeting: React.FC = () => {
     setIsMicOn(newState);
     console.log(` Micrófono ${newState ? "activado" : "silenciado"}`);
   };
-
+  /**
+   * Toggles the camera on/off state
+   * @function handleToggleCamera
+   * @returns {void}
+   */
   const handleToggleCamera = () => {
     setIsCameraOn(!isCameraOn);
     console.log(`Cámara ${!isCameraOn ? "activada" : "desactivada"}`);
   };
-
+  /**
+   * Toggles the chat panel visibility
+   * Closes participants panel if open
+   * @function toggleChat
+   * @returns {void}
+   */
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
     setIsParticipantsOpen(false);
   };
-
+  /**
+   * Toggles the participants panel visibility
+   * Closes chat panel if open
+   * @function toggleParticipants
+   * @returns {void}
+   */
   const toggleParticipants = () => {
     setIsParticipantsOpen(!isParticipantsOpen);
     setIsChatOpen(false);
@@ -724,7 +799,7 @@ const Meeting: React.FC = () => {
             className="modal-content summary-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>📋 Resumen de la Reunión</h3>
+            <h3>Resumen de la Reunión</h3>
             <div className="summary-content">
               <pre>{aiSummary}</pre>
             </div>

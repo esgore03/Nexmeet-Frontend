@@ -8,7 +8,11 @@ let localStream: MediaStream | null = null;
 let activeCalls: Map<string, MediaConnection> = new Map();
 
 /**
- * Inicializa audio para una meet
+ * Initializes audio for a meeting
+ * @param {string} meetId - The meeting identifier
+ * @param {string} userId - The user identifier
+ * @returns {Promise<Peer>} A promise that resolves to the Peer instance
+ * @throws {Error} If there's an error initializing the audio connection
  */
 export const initMeetAudio = async (
   meetId: string,
@@ -55,9 +59,11 @@ export const initMeetAudio = async (
     throw error;
   }
 };
-
 /**
- * Conecta al audio de otro usuario en la meet
+ * Connects to another user's audio in the meeting
+ * @param {string} targetPeerId - The peer ID of the target user
+ * @param {string} targetUserId - The user ID of the target user
+ * @returns {MediaConnection | null} The media connection instance or null if connection fails
  */
 export const connectToUserAudio = (
   targetPeerId: string,
@@ -104,7 +110,9 @@ export const connectToUserAudio = (
 };
 
 /**
- * Maneja llamadas entrantes de otros usuarios
+ * Handles incoming calls from other users
+ * @param {MediaConnection} call - The incoming media connection
+ * @returns {void}
  */
 function handleIncomingCall(call: MediaConnection): void {
   if (!localStream) {
@@ -141,12 +149,21 @@ function handleIncomingCall(call: MediaConnection): void {
     call.close();
   }
 }
-
+/**
+ * Extracts the user ID from a peer ID
+ * @param {string} peerId - The peer ID in format "meetId-userId"
+ * @returns {string} The extracted user ID
+ */
 function extractUserIdFromPeerId(peerId: string): string {
   const parts = peerId.split("-");
   return parts[parts.length - 1];
 }
-
+/**
+ * Plays remote audio from a user
+ * @param {string} userId - The user ID of the remote audio source
+ * @param {MediaStream} stream - The media stream to play
+ * @returns {void}
+ */
 function playRemoteAudio(userId: string, stream: MediaStream): void {
   stopRemoteAudio(userId);
 
@@ -167,6 +184,10 @@ function playRemoteAudio(userId: string, stream: MediaStream): void {
   });
 }
 
+/**
+ * Creates an audio container element in the DOM
+ * @returns {HTMLDivElement} The created audio container element
+ */
 function createAudioContainer(): HTMLDivElement {
   const container = document.createElement("div");
   container.id = "audio-container";
@@ -176,7 +197,9 @@ function createAudioContainer(): HTMLDivElement {
 }
 
 /**
- * Detiene audio remoto
+ * Stops remote audio from a specific user
+ * @param {string} userId - The user ID whose audio should be stopped
+ * @returns {void}
  */
 function stopRemoteAudio(userId: string): void {
   const audioEl = document.getElementById(
@@ -189,7 +212,11 @@ function stopRemoteAudio(userId: string): void {
     audioEl.remove();
   }
 }
-
+/**
+ * Toggles the microphone state (mute/unmute)
+ * @param {boolean} mute - True to mute, false to unmute
+ * @returns {boolean} The new state of the microphone (true if enabled, false if disabled)
+ */
 export const toggleMicrophone = (mute: boolean): boolean => {
   if (!localStream) {
     console.error("No hay stream local disponible");
@@ -210,22 +237,34 @@ export const toggleMicrophone = (mute: boolean): boolean => {
   console.log(`Micrófono ${newState ? "activado" : "silenciado"}`);
   return newState;
 };
-
+/**
+ * Gets the current microphone state
+ * @returns {boolean} True if microphone is enabled, false otherwise
+ */
 export const getMicrophoneState = (): boolean => {
   if (!localStream) return false;
 
   const audioTracks = localStream.getAudioTracks();
   return audioTracks.length > 0 ? audioTracks[0].enabled : false;
 };
-
+/**
+ * Gets the current peer ID
+ * @returns {string | null} The current peer ID or null if not connected
+ */
 export const getCurrentPeerId = (): string | null => {
   return peer ? peer.id : null;
 };
-
+/**
+ * Gets a list of all active audio users in the meeting
+ * @returns {string[]} An array of user IDs with active audio connections
+ */
 export const getActiveAudioUsers = (): string[] => {
   return Array.from(activeCalls.keys());
 };
-
+/**
+ * Leaves the audio meeting and cleans up all resources
+ * @returns {void}
+ */
 export const leaveMeetAudio = (): void => {
   console.log("Saliendo de la meet de audio...");
 
@@ -247,7 +286,10 @@ export const leaveMeetAudio = (): void => {
 
   console.log("Audio cleanup completado");
 };
-
+/**
+ * Cleans up all audio resources and connections
+ * @returns {void}
+ */
 function cleanup(): void {
   activeCalls.clear();
   localStream = null;
