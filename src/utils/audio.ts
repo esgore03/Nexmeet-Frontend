@@ -1,4 +1,5 @@
-import Peer, { MediaConnection } from "peerjs";
+import Peer from "peerjs";
+type MediaConnection = Peer.MediaConnection;
 
 const peerServerUrl = import.meta.env.VITE_AUDIO_SERVER_URL || "localhost:3001";
 
