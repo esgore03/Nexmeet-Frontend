@@ -139,10 +139,21 @@ body {
     max-width: 550px;
     padding: 0 20px;
     margin: 2rem 0; // ✅ Agregado margen vertical
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    @media (max-width: 640px) {
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
 }
 
 .back-arrow {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     top: 0;
     left: -100px;
@@ -152,7 +163,6 @@ body {
     border-radius: 50%;
     width: 3.8rem;
     height: 3.8rem;
-    line-height: 3rem;
     text-align: center;
     text-decoration: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -169,9 +179,27 @@ body {
         text-decoration: none;
     }
 
+    line-height: 1;
+
+    @media (max-width: 1024px) {
+        left: -60px;
+    }
+
     @media (max-width: 900px) {
         left: 10px;
         top: -70px;
+    }
+
+    @media (max-width: 640px) {
+        position: static;
+        left: auto;
+        top: auto;
+        transform: none;
+        margin-bottom: 0.5rem;
+        align-self: flex-start;
+        width: 3.2rem;
+        height: 3.2rem;
+        font-size: 2rem;
     }
 }
 
@@ -485,10 +513,39 @@ body {
 
     .input {
         padding: 0.65rem 0.85rem;
+        font-size: 16px; // Evita zoom en iOS
+    }
+
+    .button {
+        font-size: 0.95rem;
+        padding: 0.8rem 0;
+    }
+
+    .title-logo {
+        font-size: 3.5rem;
+    }
+
+    .register-box h2 {
+        font-size: 1.5rem;
     }
 
     .error-message {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+    }
+
+    .social-media-container {
+        gap: 10px;
+
+        .social-link {
+            min-width: 40px;
+            min-height: 40px;
+            padding: 5px;
+        }
+
+        .social-logo {
+            width: 28px;
+            height: 28px;
+        }
     }
 }
 
@@ -553,6 +610,19 @@ body {
 
         .topbar-logo-text {
             font-size: 1.3rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        height: 55px;
+        padding: 0 0.75rem;
+
+        .topbar-logo {
+            height: 30px;
+        }
+
+        .topbar-logo-text {
+            font-size: 1.1rem;
         }
     }
 }

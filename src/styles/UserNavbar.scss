@@ -11,6 +11,15 @@
     align-items: center;
     justify-content: space-between;
     animation: slideDown 0.6s ease-out;
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+        padding: 15px 20px;
+    }
+
+    @media (max-width: 480px) {
+        padding: 12px 15px;
+    }
 }
 
 .user-navbar-logo {
@@ -22,6 +31,12 @@
     background: transparent;
     border: none;
     transition: outline 0.2s ease;
+    flex-shrink: 0;
+    z-index: 26;
+
+    @media (max-width: 480px) {
+        gap: 10px;
+    }
 
     &:focus-visible {
         outline: 3px solid #4a9eff;
@@ -30,6 +45,15 @@
 
     img {
         height: 40px;
+        flex-shrink: 0;
+
+        @media (max-width: 768px) {
+            height: 35px;
+        }
+
+        @media (max-width: 480px) {
+            height: 28px;
+        }
     }
 
     .user-navbar-logo-text {
@@ -38,6 +62,21 @@
         color: #ffffff;
         text-transform: uppercase;
         padding-top: 6px;
+        white-space: nowrap;
+
+        @media (max-width: 768px) {
+            font-size: 20px;
+            padding-top: 4px;
+        }
+
+        @media (max-width: 480px) {
+            font-size: 16px;
+            padding-top: 2px;
+        }
+
+        @media (max-width: 360px) {
+            font-size: 14px;
+        }
     }
 }
 
@@ -45,6 +84,44 @@
     display: flex;
     gap: 24px;
     margin-right: 80px;
+    align-items: center;
+
+    @media (max-width: 768px) {
+        gap: 12px;
+        margin-right: 0;
+    }
+
+    @media (max-width: 640px) {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        min-height: 100vh;
+        background: rgba(20, 20, 20, 0.98);
+        backdrop-filter: blur(20px);
+        flex-direction: column;
+        padding-top: 80px;
+        width: 0;
+        overflow: hidden;
+        transition: width 0.3s ease;
+        z-index: 30;
+        margin: 0;
+        gap: 0;
+
+        &.open {
+            width: 280px;
+            padding-left: 30px;
+            padding-right: 30px;
+            gap: 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        &.open {
+            width: 100%;
+            max-width: 100%;
+        }
+    }
 
     button {
         background: transparent;
@@ -56,6 +133,30 @@
         border-radius: 4px;
         color: #e0e0e0;
         transition: all 0.2s ease;
+        white-space: nowrap;
+
+        @media (max-width: 768px) {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 640px) {
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border-radius: 8px;
+            justify-content: flex-start;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.15);
+            }
+        }
+
+        @media (max-width: 480px) {
+            padding: 10px 14px;
+            font-size: 0.95rem;
+        }
 
         &:focus-visible {
             outline: 3px solid #4a9eff;
@@ -66,6 +167,10 @@
         &:hover {
             background: rgba(255, 255, 255, 0.1);
             transform: translateY(-1px);
+
+            @media (max-width: 640px) {
+                transform: none;
+            }
         }
 
         &:active {
@@ -75,6 +180,74 @@
         &:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+    }
+}
+
+.user-navbar-menu-icon {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: #e0e0e0;
+    z-index: 25;
+    transition: all 0.2s ease;
+
+    @media (max-width: 640px) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        &:focus-visible {
+            outline: 3px solid #4a9eff;
+            outline-offset: 2px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        width: 36px;
+        height: 36px;
+    }
+
+    svg {
+        width: 24px;
+        height: 24px;
+
+        @media (max-width: 480px) {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}
+
+.user-navbar-overlay {
+    display: none;
+
+    @media (max-width: 640px) {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 25;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+
+        &.open {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
         }
     }
 }

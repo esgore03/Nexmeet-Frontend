@@ -73,10 +73,21 @@ body {
     width: 100%;
     max-width: 500px;
     padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    @media (max-width: 640px) {
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
 }
 
 .back-arrow-login {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     top: 0;
     left: -160px;
@@ -86,10 +97,10 @@ body {
     border-radius: 50%;
     width: 3.8rem;
     height: 3.8rem;
-    line-height: 3rem;
     text-align: center;
     text-decoration: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    line-height: 1;
     transition:
         background 0.2s,
         color 0.2s,
@@ -103,9 +114,25 @@ body {
         text-decoration: none;
     }
 
+    @media (max-width: 1024px) {
+        left: -80px;
+    }
+
     @media (max-width: 768px) {
         left: 10px;
         top: -70px;
+    }
+
+    @media (max-width: 640px) {
+        position: static;
+        left: auto;
+        top: auto;
+        margin-bottom: 0.5rem;
+        width: 3.2rem;
+        height: 3.2rem;
+        font-size: 2rem;
+        line-height: 1;
+        align-self: flex-start;
     }
 }
 
@@ -255,6 +282,10 @@ body {
 }
 
 @media (max-width: 768px) {
+    .app-container {
+        padding: 0 0.75rem;
+    }
+
     .login-box {
         width: 95%;
         padding: 1.5rem;
@@ -267,6 +298,70 @@ body {
             width: 35px;
             height: 35px;
         }
+    }
+}
+
+@media (max-width: 480px) {
+    .app-container {
+        padding: 0 0.5rem;
+    }
+
+    .login-wrapper {
+        padding: 0 10px;
+    }
+
+    .login-box {
+        width: 100%;
+        padding: 1.25rem;
+        border-radius: 16px;
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            font-size: 0.85rem;
+        }
+    }
+
+    .form {
+        .input {
+            font-size: 16px; // Evita zoom en iOS
+            padding: 0.7rem;
+        }
+
+        .button {
+            font-size: 0.95rem;
+            padding: 0.75rem;
+        }
+    }
+
+    .social-media-container {
+        gap: 12px;
+
+        .social-link {
+            min-width: 45px;
+            min-height: 45px;
+            padding: 6px;
+        }
+
+        .social-logo {
+            width: 30px;
+            height: 30px;
+        }
+    }
+
+    .hero-topbar {
+        padding: 12px 15px;
+        height: 60px;
+    }
+
+    .topbar-logo {
+        height: 30px;
+    }
+
+    .topbar-logo-text {
+        font-size: 18px;
     }
 }
 
@@ -285,10 +380,18 @@ body {
     padding-left: 40px;
     height: 70px;
     box-sizing: border-box;
+    overflow: hidden;
 
     @media (max-width: 768px) {
         height: 60px;
         padding: 15px 20px;
+        padding-left: 20px;
+    }
+
+    @media (max-width: 480px) {
+        height: 55px;
+        padding: 12px 15px;
+        padding-left: 15px;
     }
 }
 
@@ -311,6 +414,11 @@ body {
     align-items: center;
     text-decoration: none;
     gap: 15px;
+    flex-shrink: 0;
+
+    @media (max-width: 480px) {
+        gap: 10px;
+    }
 }
 
 .topbar-logo-text {
@@ -319,9 +427,20 @@ body {
     color: #ffffff;
     text-transform: uppercase;
     padding-top: 6px;
+    white-space: nowrap;
 
     @media (max-width: 768px) {
         font-size: 20px;
+        padding-top: 4px;
+    }
+
+    @media (max-width: 480px) {
+        font-size: 18px;
+        padding-top: 3px;
+    }
+
+    @media (max-width: 360px) {
+        font-size: 16px;
     }
 }
 
