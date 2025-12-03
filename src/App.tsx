@@ -8,6 +8,8 @@ import Profile from "./views/EditProfile";
 import Dashboard from "./views/Dashboard";
 import AboutUs from "./views/AboutUs";
 import ViewProfile from "./views/Profile";
+import CreateMeeting from "./views/CreateMeeting";
+
 
 const App: React.FC = () => {
   return (
@@ -32,6 +34,9 @@ const App: React.FC = () => {
 
           {/* Sobre nosotros */}
           <Route path="/about" element={<AboutUs />} />
+          
+          <Route path="/meeting/create" element={<CreateMeeting />} />
+
         </Routes>
       </div>
     </BrowserRouter>

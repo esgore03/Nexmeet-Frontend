@@ -26,6 +26,8 @@ export const API_ENDPOINTS = {
   LOGOUT: "/logout",
   PROFILE: "/users/me",
   UPDATE_PROFILE: "/users/update",
+  CREATE_MEETING: "/api/meetings/create/",
+
 };
 
 /**
