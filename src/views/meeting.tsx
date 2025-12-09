@@ -19,26 +19,25 @@ import {
   leaveMeetAudio,
   getMicrophoneState,
 } from "../utils/audio";
+import {
+  initMeetVideo,
+  connectToUserVideo,
+  toggleCamera,
+  leaveMeetVideo,
+  getCameraState,
+} from "../utils/video";
+
 /**
  * Represents a chat message in the meeting
- * @typedef {Object} Message
- * @property {string} userId - The ID of the user who sent the message
- * @property {string} message - The message content
- * @property {string} timestamp - ISO string timestamp of when the message was sent
  */
 type Message = {
   userId: string;
   message: string;
   timestamp: string;
 };
+
 /**
  * Represents a user in the meeting with their socket connection information
- * @typedef {Object} UserWithSocketId
- * @property {string} userId - The user's unique identifier
- * @property {string} socketId - The user's socket connection ID
- * @property {string | null} [name] - The user's display name (optional)
- * @property {string | null} [email] - The user's email address (optional)
- * @property {string | null} [photoURL] - URL to the user's profile photo (optional)
  */
 type UserWithSocketId = {
   userId: string;
@@ -47,8 +46,9 @@ type UserWithSocketId = {
   email?: string | null;
   photoURL?: string | null;
 };
+
 /**
- * Meeting component - Main component for video call meetings with chat, participants, and audio functionality
+ * Meeting component - Main component for video call meetings with chat, participants, audio and video functionality
  * @component
  * @returns {JSX.Element} The rendered Meeting component
  */
@@ -58,27 +58,40 @@ const Meeting: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasJoinedRef = useRef(false);
   const isCleaningUpRef = useRef(false);
+
   const audioInitializedRef = useRef(false);
-  const connectedPeersRef = useRef<Set<string>>(new Set());
+  const connectedAudioPeersRef = useRef<Set<string>>(new Set());
+
+  const videoInitializedRef = useRef(false);
+  const connectedVideoPeersRef = useRef<Set<string>>(new Set());
+  const localVideoRef = useRef<HTMLVideoElement>(null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isCameraOn, setIsCameraOn] = useState(true);
   const [participants, setParticipants] = useState<UserWithSocketId[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
-  const [isAudioReady, setIsAudioReady] = useState(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
+
   const [meetingCreatorId, setMeetingCreatorId] = useState<string | null>(null);
   const [showEndMeetingConfirm, setShowEndMeetingConfirm] = useState(false);
   const [aiSummary, setAiSummary] = useState<string>("");
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [showEndMeetingModal, setShowEndMeetingModal] = useState(false);
   const showingSummaryRef = useRef(false);
-  const [showCopyToast, setShowCopyToast] = useState(false);
+
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [isAudioReady, setIsAudioReady] = useState(false);
+
+  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(
+    new Map(),
+  );
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -130,11 +143,9 @@ const Meeting: React.FC = () => {
       console.log("Ya se ha unido a la reunión, evitando duplicado");
       return;
     }
+
     /**
      * Fetches meeting information from the backend
-     * @async
-     * @function fetchMeetingInfo
-     * @returns {Promise<void>}
      */
     const fetchMeetingInfo = async () => {
       try {
@@ -161,12 +172,9 @@ const Meeting: React.FC = () => {
     };
 
     fetchMeetingInfo();
+
     /**
      * Initializes the socket connection and registers the user in the meeting
-     * Sets up socket event listeners for real-time communication
-     * @async
-     * @function initializeSocketConnection
-     * @returns {Promise<void>}
      */
     const initializeSocketConnection = async () => {
       hasJoinedRef.current = true;
@@ -217,26 +225,26 @@ const Meeting: React.FC = () => {
         ) => {
           console.log("Usuarios online:", users);
           console.log("  - Total participantes:", users.length);
-          console.log(
-            "  - Lista completa:",
-            users.map((u) => ({
-              userId: u.userId,
-              name: u.name,
-              socketId: u.socketId,
-            })),
-          );
 
           setParticipants(users);
 
           if (joiningUser) {
             console.log(
-              ` ${joiningUser.name || joiningUser.email || "Usuario"} se unió a la reunión`,
+              `${joiningUser.name || joiningUser.email || "Usuario"} se unió a la reunión`,
             );
           }
           if (leavingUser) {
             console.log(
-              ` ${leavingUser.name || leavingUser.email || "Usuario"} salió de la reunión`,
+              `${leavingUser.name || leavingUser.email || "Usuario"} salió de la reunión`,
             );
+
+            setRemoteStreams((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(leavingUser.userId);
+              return newMap;
+            });
+            connectedVideoPeersRef.current.delete(leavingUser.userId);
+            connectedAudioPeersRef.current.delete(leavingUser.userId);
           }
         },
       );
@@ -265,6 +273,7 @@ const Meeting: React.FC = () => {
           setError(errorData.message);
         },
       );
+
       socket.on("meetingEnded", () => {
         if (showingSummaryRef.current || currentUserId === meetingCreatorId) {
           console.log("Ignorando meetingEnded");
@@ -278,18 +287,14 @@ const Meeting: React.FC = () => {
           audioInitializedRef.current = false;
         }
 
+        if (videoInitializedRef.current) {
+          leaveMeetVideo();
+          videoInitializedRef.current = false;
+        }
+
         disconnectSocket();
         setShowEndMeetingModal(true);
       });
-
-      console.log("Verificando listeners registrados:");
-      console.log("Verificando listeners registrados:");
-      console.log("  - newMessage:", socket.listeners("newMessage").length);
-      console.log("  - usersOnline:", socket.listeners("usersOnline").length);
-      console.log(
-        "  - chatServerError:",
-        socket.listeners("chatServerError").length,
-      );
 
       socket.on("connect", async () => {
         console.log("Socket reconectado, volviendo a unirse a la reunión");
@@ -311,7 +316,7 @@ const Meeting: React.FC = () => {
 
             socket.emit("newUser", authToken, userId, meetingId);
           } catch (error) {
-            console.error("❌ Error en reconexión:", error);
+            console.error("Error en reconexión:", error);
           }
         }
       });
@@ -348,13 +353,7 @@ const Meeting: React.FC = () => {
     if (!currentUserId || !meetingId || audioInitializedRef.current) {
       return;
     }
-    /**
-     * Initializes the audio system for the meeting
-     * Requests microphone permissions and sets up peer-to-peer audio connections
-     * @async
-     * @function initAudio
-     * @returns {Promise<void>}
-     */
+
     const initAudio = async () => {
       try {
         console.log("Inicializando sistema de audio...");
@@ -381,7 +380,68 @@ const Meeting: React.FC = () => {
         leaveMeetAudio();
         audioInitializedRef.current = false;
         setIsAudioReady(false);
-        connectedPeersRef.current.clear();
+        connectedAudioPeersRef.current.clear();
+      }
+    };
+  }, [currentUserId, meetingId]);
+
+  useEffect(() => {
+    if (!currentUserId || !meetingId || videoInitializedRef.current) {
+      return;
+    }
+
+    const initVideo = async () => {
+      try {
+        console.log("Inicializando sistema de video...");
+
+        const stream = await initMeetVideo(
+          meetingId,
+          currentUserId,
+
+          (userId: string, remoteStream: MediaStream) => {
+            console.log("Stream remoto recibido de:", userId);
+            setRemoteStreams((prev) => new Map(prev).set(userId, remoteStream));
+          },
+
+          (userId: string) => {
+            console.log("Stream remoto removido de:", userId);
+            setRemoteStreams((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(userId);
+              return newMap;
+            });
+          },
+        );
+
+        setLocalStream(stream);
+        videoInitializedRef.current = true;
+        setIsVideoReady(true);
+
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+
+        const camState = getCameraState();
+        setIsCameraOn(camState);
+
+        console.log("Video inicializado correctamente");
+      } catch (error) {
+        console.error("Error inicializando video:", error);
+        setError("No se pudo acceder a la cámara. Verifica los permisos.");
+      }
+    };
+
+    initVideo();
+
+    return () => {
+      if (videoInitializedRef.current) {
+        console.log("Limpiando video...");
+        leaveMeetVideo();
+        videoInitializedRef.current = false;
+        setIsVideoReady(false);
+        setLocalStream(null);
+        setRemoteStreams(new Map());
+        connectedVideoPeersRef.current.clear();
       }
     };
   }, [currentUserId, meetingId]);
@@ -398,8 +458,8 @@ const Meeting: React.FC = () => {
 
       const peerId = `${meetingId}-${user.userId}`;
 
-      if (connectedPeersRef.current.has(user.userId)) {
-        console.log(`Ya conectado con ${user.name || user.userId}`);
+      if (connectedAudioPeersRef.current.has(user.userId)) {
+        console.log(`Ya conectado audio con ${user.name || user.userId}`);
         return;
       }
 
@@ -407,29 +467,71 @@ const Meeting: React.FC = () => {
       const call = connectToUserAudio(peerId, user.userId);
 
       if (call) {
-        connectedPeersRef.current.add(user.userId);
-        console.log(`Conexión establecida con: ${user.name || user.userId}`);
+        connectedAudioPeersRef.current.add(user.userId);
+        console.log(
+          `Conexión audio establecida con: ${user.name || user.userId}`,
+        );
       }
     });
 
     const currentUserIds = new Set(participants.map((p) => p.userId));
-    connectedPeersRef.current.forEach((userId) => {
-      if (!currentUserIds.has(userId)) {
-        console.log(`Usuario ${userId} salió, limpiando conexión`);
-        connectedPeersRef.current.delete(userId);
+    connectedAudioPeersRef.current.forEach((oduserId) => {
+      if (!currentUserIds.has(oduserId)) {
+        console.log(`Usuario ${oduserId} salió, limpiando conexión audio`);
+        connectedAudioPeersRef.current.delete(oduserId);
       }
     });
   }, [participants, isAudioReady, meetingId, currentUserId]);
 
   useEffect(() => {
+    if (!isVideoReady || !meetingId || !currentUserId) {
+      return;
+    }
+
+    participants.forEach((user) => {
+      if (user.userId === currentUserId) {
+        return;
+      }
+
+      if (connectedVideoPeersRef.current.has(user.userId)) {
+        console.log(`Ya conectado video con ${user.name || user.userId}`);
+        return;
+      }
+
+      const peerId = `${meetingId}-${user.userId}`;
+      console.log(`Conectando al video de: ${user.name || user.userId}`);
+
+      const call = connectToUserVideo(peerId, user.userId);
+
+      if (call) {
+        connectedVideoPeersRef.current.add(user.userId);
+        console.log(
+          `Conexión video establecida con: ${user.name || user.userId}`,
+        );
+      }
+    });
+
+    const currentUserIds = new Set(participants.map((p) => p.userId));
+    connectedVideoPeersRef.current.forEach((oduserId) => {
+      if (!currentUserIds.has(oduserId)) {
+        console.log(`Usuario ${oduserId} salió, limpiando conexión video`);
+        connectedVideoPeersRef.current.delete(oduserId);
+      }
+    });
+  }, [participants, isVideoReady, meetingId, currentUserId]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
+
   /**
    * Handles sending a chat message
-   * Emits the message through socket and saves it to the database
-   * @async
-   * @function handleSendMessage
-   * @returns {Promise<void>}
    */
   const handleSendMessage = async () => {
     const trimmed = messageInput.trim();
@@ -478,18 +580,15 @@ const Meeting: React.FC = () => {
       console.error("Error guardando mensaje:", error);
     }
   };
+
   /**
    * Handles leaving the call for the current user
-   * Cleans up audio connections, removes user from backend, and disconnects socket
-   * @async
-   * @function handleLeaveCall
-   * @returns {Promise<void>}
    */
   const handleLeaveCall = async () => {
     try {
       if (!meetingId) return;
 
-      console.log("🚪 Saliendo de la llamada...");
+      console.log("Saliendo de la llamada...");
 
       const authToken = localStorage.getItem("authToken");
       const socket = getSocket();
@@ -497,6 +596,11 @@ const Meeting: React.FC = () => {
       if (audioInitializedRef.current) {
         leaveMeetAudio();
         audioInitializedRef.current = false;
+      }
+
+      if (videoInitializedRef.current) {
+        leaveMeetVideo();
+        videoInitializedRef.current = false;
       }
 
       try {
@@ -523,12 +627,9 @@ const Meeting: React.FC = () => {
       navigate("/dashboard");
     }
   };
+
   /**
    * Handles ending the meeting for all participants (host only)
-   * Notifies all users, finishes the meeting in backend, and displays AI summary
-   * @async
-   * @function handleEndMeeting
-   * @returns {Promise<void>}
    */
   const handleEndMeeting = async () => {
     try {
@@ -542,6 +643,11 @@ const Meeting: React.FC = () => {
       if (audioInitializedRef.current) {
         leaveMeetAudio();
         audioInitializedRef.current = false;
+      }
+
+      if (videoInitializedRef.current) {
+        leaveMeetVideo();
+        videoInitializedRef.current = false;
       }
 
       let summary = "No se pudo generar un resumen.";
@@ -579,10 +685,9 @@ const Meeting: React.FC = () => {
       navigate("/dashboard");
     }
   };
+
   /**
    * Copies the meeting ID to the clipboard and shows a toast notification
-   * @function copyMeetingId
-   * @returns {void}
    */
   const copyMeetingId = () => {
     if (meetingId) {
@@ -591,10 +696,9 @@ const Meeting: React.FC = () => {
       setTimeout(() => setShowToast(false), 3000);
     }
   };
+
   /**
    * Toggles the microphone on/off state
-   * @function handleToggleMic
-   * @returns {void}
    */
   const handleToggleMic = () => {
     if (!isAudioReady) {
@@ -604,57 +708,133 @@ const Meeting: React.FC = () => {
 
     const newState = toggleMicrophone(isMicOn);
     setIsMicOn(newState);
-    console.log(` Micrófono ${newState ? "activado" : "silenciado"}`);
+    console.log(`Micrófono ${newState ? "activado" : "silenciado"}`);
   };
+
   /**
    * Toggles the camera on/off state
-   * @function handleToggleCamera
-   * @returns {void}
    */
   const handleToggleCamera = () => {
-    setIsCameraOn(!isCameraOn);
-    console.log(`Cámara ${!isCameraOn ? "activada" : "desactivada"}`);
+    if (!isVideoReady) {
+      console.warn("Video no está listo");
+      return;
+    }
+
+    const newState = toggleCamera(isCameraOn);
+    setIsCameraOn(newState);
+    console.log(`Cámara ${newState ? "activada" : "desactivada"}`);
   };
+
   /**
    * Toggles the chat panel visibility
-   * Closes participants panel if open
-   * @function toggleChat
-   * @returns {void}
    */
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
     setIsParticipantsOpen(false);
   };
+
   /**
    * Toggles the participants panel visibility
-   * Closes chat panel if open
-   * @function toggleParticipants
-   * @returns {void}
    */
   const toggleParticipants = () => {
     setIsParticipantsOpen(!isParticipantsOpen);
     setIsChatOpen(false);
   };
 
+  /**
+   * Gets the name to display for a user
+   */
+  const getUserDisplayName = (oduserId: string): string => {
+    const user = participants.find((p) => p.userId === oduserId);
+    return user?.name || user?.email || "Usuario";
+  };
+
   const isCreator = currentUserId === meetingCreatorId;
 
+  /**
+   * Gets the current user's initial letter
+   */
+  const getCurrentUserInitial = (): string => {
+    const currentUser = participants.find((p) => p.userId === currentUserId);
+    // Fallback to localStorage if not found in participants yet
+    const displayName =
+      currentUser?.name ||
+      currentUser?.email ||
+      localStorage.getItem("userEmail") ||
+      "U";
+    return displayName.charAt(0).toUpperCase();
+  };
   return (
     <div className="video-call">
-      <div className="video-container">
-        <h1>Video Call</h1>
-
-        <div className="meeting-id-display">
-          <p>
-            ID de la reunión: <strong>{meetingId}</strong>
-          </p>
-          <button onClick={copyMeetingId} className="copy-btn">
-            Copiar ID
-          </button>
+      {/* Video Grid Container */}
+      <div className="video-grid-container">
+        {/* Local Video */}
+        <div
+          className={`video-wrapper local-video-wrapper ${!isCameraOn ? "camera-off" : ""}`}
+        >
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="video-element local-video"
+          />
+          {!isCameraOn && (
+            <div className="camera-off-placeholder">
+              <div className="avatar-placeholder">
+                {getCurrentUserInitial()}
+              </div>
+              <span>Cámara desactivada</span>
+            </div>
+          )}
+          <div className="video-label">
+            <span>Tú</span>
+            {!isMicOn && <span className="mic-off-indicator">🔇</span>}
+          </div>
         </div>
 
-        {error && <p className="error-message">{error}</p>}
+        {/* Remote Videos */}
+        {Array.from(remoteStreams.entries()).map(([oduserId, stream]) => (
+          <RemoteVideoElement
+            key={oduserId}
+            stream={stream}
+            displayName={getUserDisplayName(oduserId)}
+          />
+        ))}
+
+        {/* Empty slots for participants without video yet */}
+        {participants
+          .filter(
+            (p) => p.userId !== currentUserId && !remoteStreams.has(p.userId),
+          )
+          .map((user) => (
+            <div key={user.userId} className="video-wrapper connecting">
+              <div className="camera-off-placeholder">
+                <div className="avatar-placeholder">
+                  {(user.name || user.email || "U").charAt(0).toUpperCase()}
+                </div>
+                <span>Conectando...</span>
+              </div>
+              <div className="video-label">
+                <span>{user.name || user.email || "Usuario"}</span>
+              </div>
+            </div>
+          ))}
       </div>
 
+      {/* Meeting ID Display */}
+      <div className="meeting-id-display">
+        <p>
+          ID: <strong>{meetingId}</strong>
+        </p>
+        <button onClick={copyMeetingId} className="copy-btn">
+          Copiar
+        </button>
+      </div>
+
+      {error && <p className="error-message">{error}</p>}
+
+      {/* Toast Notifications */}
       {showToast && (
         <div className="toast-notification">
           <div className="toast-content">
@@ -663,14 +843,16 @@ const Meeting: React.FC = () => {
           </div>
         </div>
       )}
+
       {showCopyToast && (
         <div className="toast-notification copy-toast">
           <div className="toast-content">
-            <span className="toast-icon">📋</span>
             <span className="toast-text">Resumen copiado al portapapeles</span>
           </div>
         </div>
       )}
+
+      {/* End Meeting Confirmation Modal */}
       {showEndMeetingConfirm && (
         <div
           className="modal-overlay"
@@ -694,6 +876,7 @@ const Meeting: React.FC = () => {
         </div>
       )}
 
+      {/* Bottom Controls */}
       <div className="bottom-controls">
         <button
           className={`control-btn ${!isMicOn ? "disabled" : ""}`}
@@ -702,6 +885,17 @@ const Meeting: React.FC = () => {
           disabled={!isAudioReady}
         >
           <img src={micro} alt="Micrófono" />
+          {!isMicOn && <div className="control-slash" />}
+        </button>
+
+        <button
+          className={`control-btn ${!isCameraOn ? "disabled" : ""}`}
+          onClick={handleToggleCamera}
+          title={isCameraOn ? "Desactivar cámara" : "Activar cámara"}
+          disabled={!isVideoReady}
+        >
+          <img src={camera} alt="Cámara" />
+          {!isCameraOn && <div className="control-slash" />}
         </button>
 
         <button
@@ -721,16 +915,9 @@ const Meeting: React.FC = () => {
             <span className="end-text">Finalizar Reunión</span>
           </button>
         )}
-
-        <button
-          className={`control-btn ${!isCameraOn ? "disabled" : ""}`}
-          onClick={handleToggleCamera}
-          title={isCameraOn ? "Desactivar cámara" : "Activar cámara"}
-        >
-          <img src={camera} alt="Cámara" />
-        </button>
       </div>
 
+      {/* Side Controls */}
       <div className="side-controls">
         <button
           className="side-btn"
@@ -748,6 +935,7 @@ const Meeting: React.FC = () => {
         </button>
       </div>
 
+      {/* Chat Panel */}
       <div className={`chat-panel ${isChatOpen ? "open" : ""}`}>
         <div className="panel-header">
           <h3>Chat</h3>
@@ -801,12 +989,13 @@ const Meeting: React.FC = () => {
         </div>
       </div>
 
+      {/* Summary Modal */}
       {showSummaryModal && (
         <div
           className="modal-overlay"
           onClick={() => {
             setShowSummaryModal(false);
-            showingSummaryRef.current = false; // ✅ Resetear
+            showingSummaryRef.current = false;
             disconnectSocket();
             navigate("/dashboard");
           }}
@@ -844,6 +1033,8 @@ const Meeting: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Meeting Ended Modal (for non-hosts) */}
       {showEndMeetingModal && (
         <div className="modal-overlay end-meeting-overlay">
           <div className="modal-content end-meeting-modal">
@@ -869,6 +1060,8 @@ const Meeting: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Participants Panel */}
       <div className={`participants-panel ${isParticipantsOpen ? "open" : ""}`}>
         <div className="panel-header">
           <h3>Participantes ({participants.length})</h3>
@@ -883,17 +1076,22 @@ const Meeting: React.FC = () => {
           <ul className="participants-list">
             {participants.map((user) => (
               <li key={user.socketId} className="participant-item">
-                {user.photoURL && (
+                {user.photoURL ? (
                   <img
                     src={user.photoURL}
                     alt={user.name || "Usuario"}
                     className="participant-avatar"
                   />
+                ) : (
+                  <div className="participant-avatar-placeholder">
+                    {(user.name || user.email || "U").charAt(0).toUpperCase()}
+                  </div>
                 )}
                 <div className="participant-info">
                   <span className="participant-name">
                     {user.name || "Usuario"}
                     {user.userId === currentUserId && " (Tú)"}
+                    {user.userId === meetingCreatorId && " 👑"}
                   </span>
                   {user.email && (
                     <span className="participant-email">{user.email}</span>
@@ -903,6 +1101,41 @@ const Meeting: React.FC = () => {
             ))}
           </ul>
         </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Component to render a remote user's video stream
+ */
+interface RemoteVideoElementProps {
+  stream: MediaStream;
+  displayName: string;
+}
+
+const RemoteVideoElement: React.FC<RemoteVideoElementProps> = ({
+  stream,
+  displayName,
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  return (
+    <div className="video-wrapper remote-video-wrapper">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className="video-element remote-video"
+      />
+      <div className="video-label">
+        <span>{displayName}</span>
       </div>
     </div>
   );
