@@ -268,7 +268,7 @@ export const getRemoteStreams = (): Map<string, MediaStream> => {
 export const leaveMeetVideo = (): void => {
   console.log("Saliendo de la meet de video...");
 
-  videoConnections.forEach((call, oduserId) => {
+  videoConnections.forEach((call) => {
     call.close();
   });
   videoConnections.clear();

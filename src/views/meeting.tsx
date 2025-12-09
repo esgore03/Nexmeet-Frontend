@@ -750,14 +750,6 @@ const Meeting: React.FC = () => {
   };
 
   const isCreator = currentUserId === meetingCreatorId;
-  /**
-   * Gets the initial letter for a user's avatar
-   */
-  const getUserInitial = (oduserId: string): string => {
-    const user = participants.find((p) => p.oduserId === oduserId);
-    const displayName = user?.name || user?.email || "U";
-    return displayName.charAt(0).toUpperCase();
-  };
 
   /**
    * Gets the current user's initial letter
@@ -805,7 +797,6 @@ const Meeting: React.FC = () => {
         {Array.from(remoteStreams.entries()).map(([oduserId, stream]) => (
           <RemoteVideoElement
             key={oduserId}
-            userId={oduserId}
             stream={stream}
             displayName={getUserDisplayName(oduserId)}
           />
@@ -1119,13 +1110,11 @@ const Meeting: React.FC = () => {
  * Component to render a remote user's video stream
  */
 interface RemoteVideoElementProps {
-  userId: string;
   stream: MediaStream;
   displayName: string;
 }
 
 const RemoteVideoElement: React.FC<RemoteVideoElementProps> = ({
-  userId,
   stream,
   displayName,
 }) => {
