@@ -223,10 +223,29 @@ $transition-normal: 0.3s ease;
         gap: 10px;
         z-index: 5;
 
+        @media (max-width: 768px) {
+            top: 10px;
+            left: 10px;
+            padding: 8px 12px;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        @media (max-width: 480px) {
+            top: 5px;
+            left: 5px;
+            padding: 6px 10px;
+            gap: 6px;
+        }
+
         p {
             color: $text-primary;
             margin: 0;
             font-size: 14px;
+
+            @media (max-width: 480px) {
+                font-size: 12px;
+            }
 
             strong {
                 color: $primary-color;
@@ -244,6 +263,11 @@ $transition-normal: 0.3s ease;
             font-size: 12px;
             font-weight: 600;
             transition: all $transition-fast;
+
+            @media (max-width: 480px) {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
 
             &:hover {
                 background: $primary-hover;
@@ -283,15 +307,33 @@ $transition-normal: 0.3s ease;
         display: flex;
         gap: 16px;
         z-index: 10;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(10px);
-        padding: 12px 24px;
-        border-radius: 50px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 90vw;
+
+        @media (max-width: 768px) {
+            bottom: 20px;
+            gap: 15px;
+        }
+
+        @media (max-width: 480px) {
+            bottom: 15px;
+            gap: 10px;
+        }
 
         .control-btn {
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
+
+            @media (max-width: 768px) {
+                width: 50px;
+                height: 50px;
+            }
+
+            @media (max-width: 480px) {
+                width: 45px;
+                height: 45px;
+            }
             border-radius: 50%;
             border: none;
             background: rgba(255, 255, 255, 0.1);
@@ -390,9 +432,31 @@ $transition-normal: 0.3s ease;
         gap: 15px;
         z-index: 10;
 
+        @media (max-width: 768px) {
+            bottom: 100px;
+            right: 20px;
+            gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+            bottom: 90px;
+            right: 15px;
+            gap: 10px;
+        }
+
         .side-btn {
             width: 50px;
             height: 50px;
+
+            @media (max-width: 768px) {
+                width: 45px;
+                height: 45px;
+            }
+
+            @media (max-width: 480px) {
+                width: 40px;
+                height: 40px;
+            }
             border-radius: 50%;
             border: none;
             background: rgba(255, 255, 255, 0.1);
@@ -525,6 +589,11 @@ $transition-normal: 0.3s ease;
         display: flex;
         flex-direction: column;
         z-index: 20;
+
+        @media (max-width: 768px) {
+            width: 100%;
+            max-width: 100%;
+        }
 
         &.open {
             transform: translateX(0);
@@ -753,6 +822,11 @@ $transition-normal: 0.3s ease;
         z-index: 20;
         display: flex;
         flex-direction: column;
+
+        @media (max-width: 768px) {
+            width: 100%;
+            max-width: 100%;
+        }
 
         &.open {
             transform: translateX(0);
@@ -1563,254 +1637,18 @@ $transition-normal: 0.3s ease;
 
 @media (max-width: 480px) {
     .video-call {
-        .video-grid-container {
-            padding: 55px 8px 95px 8px;
-            gap: 6px;
-
-            &:has(.video-wrapper:nth-child(5)) {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .video-wrapper {
-            min-height: 120px;
-            border-radius: 8px;
-
-            .video-label {
-                bottom: 6px;
-                left: 6px;
-                padding: 3px 8px;
-                border-radius: 12px;
-
-                span {
-                    font-size: 10px;
-                    max-width: 80px;
-                }
-
-                .mic-off-indicator {
-                    font-size: 10px;
-                }
-            }
-        }
-
-        .camera-off-placeholder {
-            .avatar-placeholder {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-
-            span {
-                font-size: 11px;
-            }
-        }
-
-        .meeting-id-display {
-            top: 8px;
-            left: 8px;
-            right: 8px;
-            padding: 6px 10px;
-            justify-content: space-between;
-
-            p {
-                font-size: 11px;
-                flex: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-
-                strong {
-                    display: block;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            }
-        }
-
-        .bottom-controls {
-            bottom: 15px;
-            padding: 6px 12px;
-            gap: 8px;
-            border-radius: 40px;
-
-            .control-btn {
-                width: 42px;
-                height: 42px;
-                padding: 8px;
-
-                .control-slash {
-                    height: 2px;
-                }
-            }
-        }
-
-        .end-meeting-btn {
-            padding: 6px 12px;
-
-            .end-text {
-                font-size: 10px;
-                letter-spacing: 0;
-            }
-        }
-
-        .side-controls {
-            bottom: 15px;
-            right: 10px;
-            gap: 8px;
-
-            .side-btn {
-                width: 40px;
-                height: 40px;
-                padding: 8px;
-
-                .badge {
-                    width: 16px;
-                    height: 16px;
-                    font-size: 9px;
-                    top: -3px;
-                    right: -3px;
-                }
-            }
-        }
-
-        .chat-panel,
-        .participants-panel {
-            .panel-header {
-                padding: 15px;
-
-                h3 {
-                    font-size: 1.2rem;
-                }
-
-                .close-btn {
-                    font-size: 1.5rem;
-                    width: 25px;
-                    height: 25px;
-                }
-            }
-
-            .messages-container,
-            .participants-content {
-                padding: 15px;
-            }
-
-            .chat-input-container {
-                padding: 15px;
-                gap: 8px;
-
-                .chat-input {
-                    padding: 8px 12px;
-                    font-size: 14px;
-                }
-
-                .send-btn {
-                    padding: 8px 16px;
-                    font-size: 13px;
-                }
-            }
-
-            .participants-list {
-                .participant-item {
-                    padding: 10px;
-                    gap: 10px;
-
-                    .participant-avatar,
-                    .participant-avatar-placeholder {
-                        width: 36px;
-                        height: 36px;
-                        font-size: 14px;
-                    }
-
-                    .participant-info {
-                        .participant-name {
-                            font-size: 13px;
-                        }
-
-                        .participant-email {
-                            font-size: 11px;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    .toast-notification {
-        top: 60px;
-        left: 10px;
-        right: 10px;
-
-        .toast-content {
-            padding: 10px 14px;
-            font-size: 12px;
-            border-radius: 10px;
-
-            .toast-icon {
-                width: 22px;
-                height: 22px;
-                font-size: 12px;
-            }
-        }
-    }
-
-    .modal-overlay {
-        padding: 10px;
-
-        .modal-content {
-            padding: 20px;
-            border-radius: 12px;
-
-            h3 {
-                font-size: 18px;
-                margin-bottom: 12px;
-            }
-
-            p {
-                font-size: 13px;
-                margin-bottom: 20px;
-            }
-
-            .modal-buttons {
-                gap: 10px;
-
-                .modal-btn {
-                    padding: 10px 20px;
-                    font-size: 13px;
-                    min-width: auto;
-                }
-            }
-        }
-    }
-
-    .summary-modal {
-        max-height: 85vh;
-
-        .summary-content {
-            padding: 12px;
-            margin-bottom: 15px;
-
-            pre {
-                font-size: 12px;
-                line-height: 1.5;
-            }
-        }
-
-        .modal-buttons {
-            gap: 8px;
-
-            .modal-btn {
-                padding: 10px 16px;
-                font-size: 12px;
-            }
+        .video-container h1 {
+            font-size: 2rem;
         }
     }
 
     .end-meeting-modal {
-        padding: 24px 20px !important;
+        padding: 30px 20px !important;
+        max-width: 95% !important;
 
         .modal-icon {
             width: 56px;
             height: 56px;
-            margin-bottom: 20px;
 
             span {
                 font-size: 28px;
@@ -1822,173 +1660,21 @@ $transition-normal: 0.3s ease;
         }
 
         p {
-            font-size: 13px !important;
+            font-size: 14px !important;
 
             &.subtext {
-                font-size: 11px !important;
-                margin-bottom: 24px !important;
+                font-size: 12px !important;
             }
         }
 
         .modal-buttons {
+            flex-direction: column;
+            gap: 10px;
+
             .modal-btn {
-                padding: 12px 24px;
-                font-size: 14px;
+                width: 100%;
+                padding: 10px 20px;
             }
-        }
-    }
-}
-
-@media (max-height: 500px) and (orientation: landscape) {
-    .video-call {
-        .video-grid-container {
-            padding: 50px 15px 80px 15px;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        }
-
-        .video-wrapper {
-            min-height: 100px;
-        }
-
-        .bottom-controls {
-            bottom: 10px;
-            padding: 6px 14px;
-
-            .control-btn {
-                width: 40px;
-                height: 40px;
-            }
-        }
-
-        .side-controls {
-            bottom: 10px;
-            flex-direction: row;
-            right: auto;
-            left: 50%;
-            transform: translateX(calc(-50% + 150px));
-
-            .side-btn {
-                width: 38px;
-                height: 38px;
-            }
-        }
-
-        .meeting-id-display {
-            top: 8px;
-            padding: 5px 10px;
-
-            p {
-                font-size: 11px;
-            }
-        }
-
-        .end-meeting-btn {
-            position: fixed;
-            bottom: 10px;
-            left: auto;
-            right: 15px;
-            transform: none;
-            padding: 6px 12px;
-
-            .end-text {
-                font-size: 10px;
-            }
-        }
-    }
-
-    .chat-panel,
-    .participants-panel {
-        width: 300px;
-    }
-
-    .modal-overlay .modal-content {
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-}
-
-@media (prefers-contrast: high) {
-    .video-call {
-        .video-wrapper {
-            border-width: 3px;
-
-            &.local-video-wrapper {
-                border-color: #ffffff;
-            }
-
-            &.remote-video-wrapper {
-                border-color: #00ff00;
-            }
-
-            &.connecting {
-                border-color: #ffff00;
-            }
-        }
-
-        .video-label {
-            background: #000000;
-            border: 2px solid #ffffff;
-        }
-
-        .bottom-controls {
-            background: #000000;
-            border: 2px solid #ffffff;
-
-            .control-btn {
-                border: 2px solid #ffffff;
-
-                &.disabled {
-                    border-color: #ff0000;
-                }
-            }
-        }
-
-        .camera-off-placeholder {
-            background: #000000;
-
-            .avatar-placeholder {
-                border: 3px solid #ffffff;
-            }
-        }
-    }
-
-    .modal-overlay .modal-content {
-        border: 3px solid #ffffff;
-
-        .modal-btn {
-            border: 2px solid currentColor;
-        }
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    .summary-modal .summary-content {
-        background: #2a2a2e;
-
-        pre {
-            color: #e5e5e5;
-        }
-    }
-}
-
-@media print {
-    .video-call {
-        .bottom-controls,
-        .side-controls,
-        .chat-panel,
-        .participants-panel,
-        .meeting-id-display,
-        .end-meeting-btn {
-            display: none !important;
-        }
-
-        .video-grid-container {
-            padding: 0;
-        }
-
-        .video-wrapper {
-            border: 1px solid #000;
-            page-break-inside: avoid;
         }
     }
 }
