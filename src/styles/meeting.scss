@@ -13,7 +13,6 @@ $border-radius: 12px;
 $transition-fast: 0.2s ease;
 $transition-normal: 0.3s ease;
 
-// ==================== MAIN CONTAINER ====================
 .video-call {
     width: 100vw;
     height: 100vh;
@@ -27,7 +26,6 @@ $transition-normal: 0.3s ease;
     display: flex;
     flex-direction: column;
 
-    // ==================== VIDEO GRID ====================
     .video-grid-container {
         flex: 1;
         display: grid;
@@ -37,30 +35,25 @@ $transition-normal: 0.3s ease;
         height: 100%;
         box-sizing: border-box;
 
-        // Dynamic grid based on participant count
         grid-template-columns: 1fr;
         grid-template-rows: 1fr;
 
-        // 2 participants
         &:has(.video-wrapper:nth-child(2):last-child) {
             grid-template-columns: repeat(2, 1fr);
         }
 
-        // 3-4 participants
         &:has(.video-wrapper:nth-child(3)),
         &:has(.video-wrapper:nth-child(4):last-child) {
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
         }
 
-        // 5-6 participants
         &:has(.video-wrapper:nth-child(5)),
         &:has(.video-wrapper:nth-child(6):last-child) {
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(2, 1fr);
         }
 
-        // 7-9 participants
         &:has(.video-wrapper:nth-child(7)),
         &:has(.video-wrapper:nth-child(8)),
         &:has(.video-wrapper:nth-child(9):last-child) {
@@ -69,7 +62,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== VIDEO WRAPPER ====================
     .video-wrapper {
         position: relative;
         background: rgba(0, 0, 0, 0.4);
@@ -84,7 +76,6 @@ $transition-normal: 0.3s ease;
             box-shadow: 0 0 20px rgba($primary-color, 0.2);
         }
 
-        // Local video styling
         &.local-video-wrapper {
             border-color: rgba($primary-color, 0.4);
 
@@ -97,7 +88,6 @@ $transition-normal: 0.3s ease;
             }
         }
 
-        // Remote video styling
         &.remote-video-wrapper {
             border-color: rgba($secondary-color, 0.3);
 
@@ -110,7 +100,6 @@ $transition-normal: 0.3s ease;
             }
         }
 
-        // Camera off state
         &.camera-off {
             .video-element {
                 opacity: 0;
@@ -121,7 +110,6 @@ $transition-normal: 0.3s ease;
             }
         }
 
-        // Connecting state
         &.connecting {
             border-color: rgba(251, 191, 36, 0.4);
             animation: connectingPulse 2s ease-in-out infinite;
@@ -140,7 +128,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== VIDEO ELEMENT ====================
     .video-element {
         width: 100%;
         height: 100%;
@@ -149,11 +136,10 @@ $transition-normal: 0.3s ease;
         background: #000;
 
         &.local-video {
-            transform: scaleX(-1); // Mirror effect for local video
+            transform: scaleX(-1);
         }
     }
 
-    // ==================== CAMERA OFF PLACEHOLDER ====================
     .camera-off-placeholder {
         position: absolute;
         top: 0;
@@ -195,7 +181,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== VIDEO LABEL ====================
     .video-label {
         position: absolute;
         bottom: 12px;
@@ -225,7 +210,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== MEETING ID DISPLAY ====================
     .meeting-id-display {
         position: absolute;
         top: 20px;
@@ -277,7 +261,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== ERROR MESSAGE ====================
     .error-message {
         position: absolute;
         top: 80px;
@@ -292,7 +275,6 @@ $transition-normal: 0.3s ease;
         animation: fadeIn $transition-normal;
     }
 
-    // ==================== BOTTOM CONTROLS ====================
     .bottom-controls {
         position: absolute;
         bottom: 30px;
@@ -385,7 +367,6 @@ $transition-normal: 0.3s ease;
                 pointer-events: none;
             }
 
-            // Slash indicator for muted/off state
             .control-slash {
                 position: absolute;
                 top: 50%;
@@ -400,7 +381,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== SIDE CONTROLS ====================
     .side-controls {
         position: absolute;
         bottom: 30px;
@@ -475,7 +455,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== END MEETING BUTTON ====================
     .end-meeting-btn {
         display: flex;
         align-items: center;
@@ -532,7 +511,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== CHAT PANEL ====================
     .chat-panel {
         position: fixed;
         right: 0;
@@ -761,8 +739,6 @@ $transition-normal: 0.3s ease;
         }
     }
 
-    // ==================== PARTICIPANTS PANEL ====================
-    // ==================== PARTICIPANTS PANEL ====================
     .participants-panel {
         position: fixed;
         right: 0;
@@ -939,9 +915,7 @@ $transition-normal: 0.3s ease;
             }
         }
     }
-} // Cierre de .video-call
-
-// ==================== ANIMATIONS ====================
+}
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -1056,7 +1030,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== TOAST NOTIFICATIONS ====================
 .toast-notification {
     position: fixed;
     top: 100px;
@@ -1112,7 +1085,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== MODAL OVERLAY ====================
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -1234,7 +1206,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== SUMMARY MODAL ====================
 .summary-modal {
     max-width: 700px !important;
     max-height: 80vh;
@@ -1283,7 +1254,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== END MEETING MODAL ====================
 .end-meeting-overlay {
     background: rgba(0, 0, 0, 0.9) !important;
     backdrop-filter: blur(10px);
@@ -1357,7 +1327,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== ACCESSIBILITY ====================
 *:focus {
     scroll-margin-top: 100px;
     scroll-margin-bottom: 100px;
@@ -1407,14 +1376,12 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== RESPONSIVE - MOBILE ====================
 @media (max-width: 768px) {
     .video-call {
         .video-grid-container {
             padding: 60px 10px 100px 10px;
             gap: 8px;
 
-            // Override grid for mobile - max 2 columns
             &:has(.video-wrapper:nth-child(3)),
             &:has(.video-wrapper:nth-child(4)),
             &:has(.video-wrapper:nth-child(5)),
@@ -1594,15 +1561,12 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== RESPONSIVE - SMALL MOBILE ====================
-// ==================== RESPONSIVE - SMALL MOBILE ====================
 @media (max-width: 480px) {
     .video-call {
         .video-grid-container {
             padding: 55px 8px 95px 8px;
             gap: 6px;
 
-            // Single column for very small screens with many participants
             &:has(.video-wrapper:nth-child(5)) {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -1875,7 +1839,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== LANDSCAPE MOBILE ====================
 @media (max-height: 500px) and (orientation: landscape) {
     .video-call {
         .video-grid-container {
@@ -1944,7 +1907,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== HIGH CONTRAST MODE ====================
 @media (prefers-contrast: high) {
     .video-call {
         .video-wrapper {
@@ -1999,7 +1961,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== DARK MODE PREFERENCE (already dark, but ensure consistency) ====================
 @media (prefers-color-scheme: dark) {
     .summary-modal .summary-content {
         background: #2a2a2e;
@@ -2010,7 +1971,6 @@ $transition-normal: 0.3s ease;
     }
 }
 
-// ==================== PRINT STYLES ====================
 @media print {
     .video-call {
         .bottom-controls,
