@@ -365,8 +365,32 @@ const EditProfile: React.FC = () => {
   if (loadingData) {
     return (
       <>
+        {/* WCAG skip-link */}
+        <a
+          href="#main-editprofile-content"
+          className="skip-link"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            background: '#2563eb',
+            color: '#fff',
+            padding: '8px 16px',
+            zIndex: 999,
+            transform: 'translateY(-120%)',
+            transition: 'transform 0.3s',
+          }}
+          onFocus={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+          onBlur={e => {
+            e.currentTarget.style.transform = 'translateY(-120%)';
+          }}
+        >
+          Saltar al contenido principal
+        </a>
         <UserNavbar />
-        <div className="profile-container">
+        <div className="profile-container" id="main-editprofile-content">
           <div className="profile-wrapper">
             <Link
               to="/profile"
@@ -387,8 +411,32 @@ const EditProfile: React.FC = () => {
   if (error) {
     return (
       <>
+        {/* WCAG skip-link */}
+        <a
+          href="#main-editprofile-content"
+          className="skip-link"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            background: '#2563eb',
+            color: '#fff',
+            padding: '8px 16px',
+            zIndex: 999,
+            transform: 'translateY(-120%)',
+            transition: 'transform 0.3s',
+          }}
+          onFocus={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+          onBlur={e => {
+            e.currentTarget.style.transform = 'translateY(-120%)';
+          }}
+        >
+          Saltar al contenido principal
+        </a>
         <UserNavbar />
-        <div className="profile-container">
+        <div className="profile-container" id="main-editprofile-content">
           <div className="profile-wrapper">
             <Link
               to="/profile"
@@ -415,9 +463,33 @@ const EditProfile: React.FC = () => {
 
   return (
     <>
+      {/* WCAG skip-link */}
+      <a
+        href="#main-editprofile-content"
+        className="skip-link"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          background: '#2563eb',
+          color: '#fff',
+          padding: '8px 16px',
+          zIndex: 999,
+          transform: 'translateY(-120%)',
+          transition: 'transform 0.3s',
+        }}
+        onFocus={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onBlur={e => {
+          e.currentTarget.style.transform = 'translateY(-120%)';
+        }}
+      >
+        Saltar al contenido principal
+      </a>
       <UserNavbar />
 
-      <div className="profile-container">
+      <div className="profile-container" id="main-editprofile-content">
         <div className="profile-wrapper">
           <Link
             to="/profile"
@@ -430,7 +502,7 @@ const EditProfile: React.FC = () => {
           <div className="profile-box">
             <h2 className="profile-title">Editar Perfil</h2>
 
-            <label className="profile-label">Nombre completo</label>
+            <label htmlFor="name" className="profile-label">Nombre completo</label>
             <input
               id="name"
               type="text"
@@ -438,9 +510,11 @@ const EditProfile: React.FC = () => {
               value={formData.name}
               onChange={handleChange}
               placeholder="Tu nombre completo"
+              autoFocus
+              aria-describedby={msgType === 'error' && msg ? 'profile-error-msg' : undefined}
             />
 
-            <label className="profile-label">Correo electrónico</label>
+            <label htmlFor="email" className="profile-label">Correo electrónico</label>
             <input
               id="email"
               type="email"
@@ -451,7 +525,7 @@ const EditProfile: React.FC = () => {
               title="El correo no se puede modificar"
             />
 
-            <label className="profile-label">Edad</label>
+            <label htmlFor="age" className="profile-label">Edad</label>
             <input
               id="age"
               type="number"
@@ -463,7 +537,7 @@ const EditProfile: React.FC = () => {
               max="120"
             />
 
-            <label className="profile-label">Nueva contraseña (opcional)</label>
+            <label htmlFor="password" className="profile-label">Nueva contraseña (opcional)</label>
             <input
               id="password"
               type="password"
@@ -473,7 +547,7 @@ const EditProfile: React.FC = () => {
               placeholder="Dejar en blanco para no cambiar"
             />
 
-            <label className="profile-label">Confirmar contraseña</label>
+            <label htmlFor="confirmPassword" className="profile-label">Confirmar contraseña</label>
             <input
               id="confirmPassword"
               type="password"
@@ -503,7 +577,14 @@ const EditProfile: React.FC = () => {
             </div>
 
             {msg && (
-              <p className={`profile-msg profile-msg-${msgType}`}>{msg}</p>
+              <p
+                className={`profile-msg profile-msg-${msgType}`}
+                id="profile-error-msg"
+                role={msgType === 'error' ? 'alert' : 'status'}
+                aria-live={msgType === 'error' ? 'assertive' : 'polite'}
+              >
+                {msg}
+              </p>
             )}
 
             <div className="danger-zone">

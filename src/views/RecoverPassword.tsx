@@ -158,7 +158,32 @@ const RecoverPassword: React.FC = () => {
         </Link>
       </div>
 
-      <div className="recover-container">
+      {/* WCAG skip-link */}
+      <a
+        href="#main-recover-content"
+        className="skip-link"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          background: '#2563eb',
+          color: '#fff',
+          padding: '8px 16px',
+          zIndex: 999,
+          transform: 'translateY(-120%)',
+          transition: 'transform 0.3s',
+        }}
+        onFocus={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onBlur={e => {
+          e.currentTarget.style.transform = 'translateY(-120%)';
+        }}
+      >
+        Saltar al contenido principal
+      </a>
+
+      <div className="recover-container" id="main-recover-content">
         <div className="recover-wrapper">
           <Link
             to="/login"
@@ -189,6 +214,7 @@ const RecoverPassword: React.FC = () => {
                 disabled={loading}
                 required
                 autoFocus
+                aria-describedby={error ? 'recover-email-error' : undefined}
               />
 
               <button type="submit" disabled={loading || !email.trim()}>
@@ -196,9 +222,9 @@ const RecoverPassword: React.FC = () => {
               </button>
             </form>
 
-            {message && <div className="success">{message}</div>}
+            {message && <div className="success" role="status" aria-live="polite">{message}</div>}
 
-            {error && <div className="error">{error}</div>}
+            {error && <div className="error" id="recover-email-error" role="alert" aria-live="assertive">{error}</div>}
 
             <div className="recover-footer">
               <p>

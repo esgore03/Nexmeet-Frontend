@@ -256,7 +256,32 @@ const ViewProfile: React.FC = () => {
     <>
       <UserNavbar />
 
-      <div className="profile-container">
+      {/* WCAG skip-link */}
+      <a
+        href="#main-profile-content"
+        className="skip-link"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          background: '#2563eb',
+          color: '#fff',
+          padding: '8px 16px',
+          zIndex: 999,
+          transform: 'translateY(-120%)',
+          transition: 'transform 0.3s',
+        }}
+        onFocus={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onBlur={e => {
+          e.currentTarget.style.transform = 'translateY(-120%)';
+        }}
+      >
+        Saltar al contenido principal
+      </a>
+
+      <div className="profile-container" id="main-profile-content">
         <div className="profile-wrapper">
           <Link
             to="/dashboard"

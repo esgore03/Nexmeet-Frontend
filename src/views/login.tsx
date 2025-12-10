@@ -264,7 +264,31 @@ const Login: React.FC = () => {
         </a>
       </div>
       <div className="app-container">
-        <div className="login-wrapper">
+        {/* WCAG skip-link */}
+        <a
+          href="#main-login-content"
+          className="skip-link"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            background: '#2563eb',
+            color: '#fff',
+            padding: '8px 16px',
+            zIndex: 999,
+            transform: 'translateY(-120%)',
+            transition: 'transform 0.3s',
+          }}
+          onFocus={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+          onBlur={e => {
+            e.currentTarget.style.transform = 'translateY(-120%)';
+          }}
+        >
+          Saltar al contenido principal
+        </a>
+        <div className="login-wrapper" id="main-login-content">
           <Link
             to="/"
             className="back-arrow-login"
@@ -289,11 +313,11 @@ const Login: React.FC = () => {
                 aria-label="Ingresa tu correo electrónico"
                 aria-required="true"
                 aria-invalid={errors.email ? "true" : "false"}
+                aria-describedby={errors.email ? 'login-email-error' : undefined}
+                autoFocus
               />
               {errors.email && (
-                <span className="error-message" role="alert">
-                  {errors.email}
-                </span>
+                <span className="error-message" role="alert" id="login-email-error">{errors.email}</span>
               )}
 
               <label htmlFor="password">Contraseña</label>
@@ -329,14 +353,7 @@ const Login: React.FC = () => {
               </Link>
 
               {formError && (
-                <div
-                  className="error-message"
-                  style={{ marginTop: 8 }}
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {formError}
-                </div>
+                <div className="error-message" role="alert" aria-live="assertive">{formError}</div>
               )}
             </form>
 

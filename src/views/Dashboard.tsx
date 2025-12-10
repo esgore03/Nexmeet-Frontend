@@ -96,77 +96,103 @@ const Dashboard: React.FC = () => {
 
 
   return (
-    <section className="dashboard" aria-live="polite">
-      <UserNavbar />
+    <>
+      {/* Pauta WCAG: Skip link para saltar contenido */}
+      <a
+        href="#main-dashboard-content"
+        className="skip-link"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          background: '#2563eb',
+          color: '#fff',
+          padding: '8px 16px',
+          zIndex: 999,
+          transform: 'translateY(-120%)',
+          transition: 'transform 0.3s',
+        }}
+        onFocus={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onBlur={e => {
+          e.currentTarget.style.transform = 'translateY(-120%)';
+        }}
+      >
+        Saltar al contenido principal
+      </a>
+      <section className="dashboard" aria-live="polite">
+        <UserNavbar />
 
-      <div className="dashboard__content">
-        <div className="dashboard__text-wrapper">
-          <h1 className="dashboard__title">Bienvenido a tu panel NexMeet</h1>
+        <div id="main-dashboard-content" className="dashboard__content">
+          <div className="dashboard__text-wrapper">
+            <h1 className="dashboard__title">Bienvenido a tu panel NexMeet</h1>
 
-          <p className="dashboard__subtitle">
-            Gestiona tus reuniones, conéctate con otros usuarios y organiza tu
-            tiempo fácilmente.
-          </p>
+            <p className="dashboard__subtitle">
+              Gestiona tus reuniones, conéctate con otros usuarios y organiza tu
+              tiempo fácilmente.
+            </p>
 
-          <div className="dashboard__actions">
-            <button
-              className="dashboard__button"
-              onClick={handleCrearReunion}
-              disabled={loading}
-              aria-label="Create a new meeting"
-            >
-              {loading ? "Creando..." : "Crear nueva reunión"}
-            </button>
-
-            <div className="dashboard__join-section">
-              <input
-                type="text"
-                placeholder="ID de la reunión"
-                value={joinId}
-                onChange={(e) => {
-                  setJoinId(e.target.value);
-                  setError("");
-                }}
-                className="dashboard__join-input"
-                onKeyPress={(e) => e.key === "Enter" && handleUnirseReunion()}
-                aria-label="Enter meeting ID"
-              />
+            <div className="dashboard__actions">
               <button
-                className="dashboard__button dashboard__button--secondary"
-                onClick={handleUnirseReunion}
-                aria-label="Join meeting by ID"
+                className="dashboard__button"
+                onClick={handleCrearReunion}
+                disabled={loading}
+                aria-label="Create a new meeting"
               >
-                Unirse a reunión
+                {loading ? "Creando..." : "Crear nueva reunión"}
               </button>
+
+              <div className="dashboard__join-section">
+                <input
+                  type="text"
+                  placeholder="ID de la reunión"
+                  value={joinId}
+                  onChange={(e) => {
+                    setJoinId(e.target.value);
+                    setError("");
+                  }}
+                  className="dashboard__join-input"
+                  onKeyPress={(e) => e.key === "Enter" && handleUnirseReunion()}
+                  aria-label="Enter meeting ID"
+                />
+                <button
+                  className="dashboard__button dashboard__button--secondary"
+                  onClick={handleUnirseReunion}
+                  aria-label="Join meeting by ID"
+                >
+                  Unirse a reunión
+                </button>
+              </div>
+
+              {error && (
+                <p
+                  className="dashboard__error"
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  {error}
+                </p>
+              )}
             </div>
 
-            {error && (
-              <p
-                className="dashboard__error"
-                role="alert"
-                aria-live="assertive"
-              >
-                {error}
-              </p>
-            )}
           </div>
 
+          <div className="dashboard__image-wrapper">
+            <img
+              src={hero2}
+              alt="Nexmeet dashboard preview"
+              className="dashboard__image"
+            />
+          </div>
         </div>
 
-        <div className="dashboard__image-wrapper">
-          <img
-            src={hero2}
-            alt="Nexmeet dashboard preview"
-            className="dashboard__image"
-          />
-        </div>
-      </div>
-
-      <p className="dashboard__description-text">
-        Revisa tus próximas reuniones o crea una nueva para mantenerte
-        conectado. Tu productividad empieza aquí.
-      </p>
-    </section>
+        <p className="dashboard__description-text">
+          Revisa tus próximas reuniones o crea una nueva para mantenerte
+          conectado. Tu productividad empieza aquí.
+        </p>
+      </section>
+    </>
   );
 };
 
