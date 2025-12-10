@@ -96,12 +96,6 @@ const UserNavbar: React.FC = () => {
         >
           Inicio
         </button>
-        <button
-          onClick={() => handleNavigation("/meeting")}
-          aria-label="View meetings"
-        >
-          Reuniones
-        </button>
 
         <button
           onClick={() => handleNavigation("/profile")}
