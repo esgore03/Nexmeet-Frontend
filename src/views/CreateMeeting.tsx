@@ -41,8 +41,33 @@ const CreateMeeting: React.FC = () => {
       {/* 🔵 NAVBAR DE USUARIO */}
       <UserNavbar />
 
+      {/* WCAG skip-link */}
+      <a
+        href="#main-createmeeting-content"
+        className="skip-link"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          background: '#2563eb',
+          color: '#fff',
+          padding: '8px 16px',
+          zIndex: 999,
+          transform: 'translateY(-120%)',
+          transition: 'transform 0.3s',
+        }}
+        onFocus={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onBlur={e => {
+          e.currentTarget.style.transform = 'translateY(-120%)';
+        }}
+      >
+        Saltar al contenido principal
+      </a>
+
       <div className="app-container-meeting">
-        <div className="main-content-meeting">
+        <div className="main-content-meeting" id="main-createmeeting-content">
           <div className="left-section-meeting">
 
             <div className="meeting-wrapper">
@@ -58,6 +83,8 @@ const CreateMeeting: React.FC = () => {
                     placeholder="Ej: Reunión del proyecto"
                     value={meeting.title}
                     onChange={handleChange}
+                    autoFocus
+                    aria-describedby={error ? 'meeting-title-error' : undefined}
                   />
 
                   <label htmlFor="description">Descripción</label>
@@ -97,8 +124,8 @@ const CreateMeeting: React.FC = () => {
                     Crear reunión
                   </button>
 
-                  {error && <div className="error-message">{error}</div>}
-                  {success && <div className="success-message">{success}</div>}
+                  {error && <div id="meeting-title-error" className="error-message" role="alert" aria-live="assertive">{error}</div>}
+                  {success && <div className="success-message" role="status" aria-live="polite">{success}</div>}
                 </form>
 
               </div>

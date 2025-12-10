@@ -237,8 +237,32 @@ const Register: React.FC = () => {
           </span>
         </a>
       </div>
+      {/* WCAG skip-link */}
+      <a
+        href="#main-register-content"
+        className="skip-link"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          background: '#2563eb',
+          color: '#fff',
+          padding: '8px 16px',
+          zIndex: 999,
+          transform: 'translateY(-120%)',
+          transition: 'transform 0.3s',
+        }}
+        onFocus={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onBlur={e => {
+          e.currentTarget.style.transform = 'translateY(-120%)';
+        }}
+      >
+        Saltar al contenido principal
+      </a>
       <div className="app-container-register">
-        <div className="main-content-register">
+        <div className="main-content-register" id="main-register-content">
           <div className="left-section-register">
             <div className="register-wrapper">
               <Link
@@ -265,9 +289,11 @@ const Register: React.FC = () => {
                     aria-label="Ingresa tu nombre completo"
                     aria-required="true"
                     aria-invalid={errors.name ? "true" : "false"}
+                    aria-describedby={errors.name ? 'register-name-error' : undefined}
+                    autoFocus
                   />
                   {errors.name && (
-                    <span className="error-message" role="alert">
+                    <span className="error-message" role="alert" id="register-name-error">
                       {errors.name}
                     </span>
                   )}
@@ -368,7 +394,7 @@ const Register: React.FC = () => {
                       className="error-message"
                       style={{ marginTop: 8 }}
                       role="alert"
-                      aria-live="polite"
+                      aria-live="assertive"
                     >
                       {formError}
                     </div>

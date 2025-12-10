@@ -765,344 +765,391 @@ const Meeting: React.FC = () => {
     return displayName.charAt(0).toUpperCase();
   };
   return (
-    <div className="video-call">
-      {/* Video Grid Container */}
-      <div className="video-grid-container">
-        {/* Local Video */}
-        <div
-          className={`video-wrapper local-video-wrapper ${!isCameraOn ? "camera-off" : ""}`}
-        >
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            playsInline
-            className="video-element local-video"
-          />
-          {!isCameraOn && (
-            <div className="camera-off-placeholder">
-              <div className="avatar-placeholder">
-                {getCurrentUserInitial()}
-              </div>
-              <span>Cámara desactivada</span>
-            </div>
-          )}
-          <div className="video-label">
-            <span>Tú</span>
-            {!isMicOn && <span className="mic-off-indicator">🔇</span>}
-          </div>
-        </div>
-
-        {/* Remote Videos */}
-        {Array.from(remoteStreams.entries()).map(([oduserId, stream]) => (
-          <RemoteVideoElement
-            key={oduserId}
-            stream={stream}
-            displayName={getUserDisplayName(oduserId)}
-          />
-        ))}
-
-        {/* Empty slots for participants without video yet */}
-        {participants
-          .filter(
-            (p) => p.userId !== currentUserId && !remoteStreams.has(p.userId),
-          )
-          .map((user) => (
-            <div key={user.userId} className="video-wrapper connecting">
+    <>
+      {/* WCAG skip-link */}
+      <a
+        href="#main-meeting-content"
+        className="skip-link"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          background: '#2563eb',
+          color: '#fff',
+          padding: '8px 16px',
+          zIndex: 999,
+          transform: 'translateY(-120%)',
+          transition: 'transform 0.3s',
+        }}
+        onFocus={e => {
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onBlur={e => {
+          e.currentTarget.style.transform = 'translateY(-120%)';
+        }}
+      >
+        Saltar al contenido principal
+      </a>
+      <div className="video-call" id="main-meeting-content">
+        {/* Video Grid Container */}
+        <div className="video-grid-container">
+          {/* Local Video */}
+          <div
+            className={`video-wrapper local-video-wrapper ${!isCameraOn ? "camera-off" : ""}`}
+          >
+            <video
+              ref={localVideoRef}
+              autoPlay
+              muted
+              playsInline
+              className="video-element local-video"
+            />
+            {!isCameraOn && (
               <div className="camera-off-placeholder">
                 <div className="avatar-placeholder">
-                  {(user.name || user.email || "U").charAt(0).toUpperCase()}
+                  {getCurrentUserInitial()}
                 </div>
-                <span>Conectando...</span>
+                <span>Cámara desactivada</span>
               </div>
-              <div className="video-label">
-                <span>{user.name || user.email || "Usuario"}</span>
-              </div>
+            )}
+            <div className="video-label">
+              <span>Tú</span>
+              {!isMicOn && <span className="mic-off-indicator">🔇</span>}
             </div>
+          </div>
+
+          {/* Remote Videos */}
+          {Array.from(remoteStreams.entries()).map(([oduserId, stream]) => (
+            <RemoteVideoElement
+              key={oduserId}
+              stream={stream}
+              displayName={getUserDisplayName(oduserId)}
+            />
           ))}
-      </div>
 
-      {/* Meeting ID Display */}
-      <div className="meeting-id-display">
-        <p>
-          ID: <strong>{meetingId}</strong>
-        </p>
-        <button onClick={copyMeetingId} className="copy-btn">
-          Copiar
-        </button>
-      </div>
-
-      {error && <p className="error-message">{error}</p>}
-
-      {/* Toast Notifications */}
-      {showToast && (
-        <div className="toast-notification">
-          <div className="toast-content">
-            <span className="toast-icon">✓</span>
-            <span className="toast-text">ID copiado al portapapeles</span>
-          </div>
-        </div>
-      )}
-
-      {showCopyToast && (
-        <div className="toast-notification copy-toast">
-          <div className="toast-content">
-            <span className="toast-text">Resumen copiado al portapapeles</span>
-          </div>
-        </div>
-      )}
-
-      {/* End Meeting Confirmation Modal */}
-      {showEndMeetingConfirm && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowEndMeetingConfirm(false)}
-        >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>¿Finalizar reunión para todos?</h3>
-            <p>Esta acción cerrará la reunión para todos los participantes.</p>
-            <div className="modal-buttons">
-              <button
-                className="modal-btn cancel"
-                onClick={() => setShowEndMeetingConfirm(false)}
-              >
-                Cancelar
-              </button>
-              <button className="modal-btn confirm" onClick={handleEndMeeting}>
-                Finalizar para todos
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Controls */}
-      <div className="bottom-controls">
-        <button
-          className={`control-btn ${!isMicOn ? "disabled" : ""}`}
-          onClick={handleToggleMic}
-          title={isMicOn ? "Silenciar micrófono" : "Activar micrófono"}
-          disabled={!isAudioReady}
-        >
-          <img src={micro} alt="Micrófono" />
-          {!isMicOn && <div className="control-slash" />}
-        </button>
-
-        <button
-          className={`control-btn ${!isCameraOn ? "disabled" : ""}`}
-          onClick={handleToggleCamera}
-          title={isCameraOn ? "Desactivar cámara" : "Activar cámara"}
-          disabled={!isVideoReady}
-        >
-          <img src={camera} alt="Cámara" />
-          {!isCameraOn && <div className="control-slash" />}
-        </button>
-
-        <button
-          className="control-btn leave-call"
-          onClick={handleLeaveCall}
-          title="Salir de la llamada"
-        >
-          <img src={end_call} alt="Salir" />
-        </button>
-
-        {isCreator && (
-          <button
-            className="end-meeting-btn"
-            onClick={() => setShowEndMeetingConfirm(true)}
-            title="Finalizar reunión para todos"
-          >
-            <span className="end-text">Finalizar Reunión</span>
-          </button>
-        )}
-      </div>
-
-      {/* Side Controls */}
-      <div className="side-controls">
-        <button
-          className="side-btn"
-          onClick={toggleParticipants}
-          title="Participantes"
-        >
-          <img src={participants_logo} alt="Participantes" />
-          {participants.length > 0 && (
-            <span className="badge">{participants.length}</span>
-          )}
-        </button>
-
-        <button className="side-btn" onClick={toggleChat} title="Chat">
-          <img src={chatIcon} alt="Chat" />
-        </button>
-      </div>
-
-      {/* Chat Panel */}
-      <div className={`chat-panel ${isChatOpen ? "open" : ""}`}>
-        <div className="panel-header">
-          <h3>Chat</h3>
-          <button className="close-btn" onClick={() => setIsChatOpen(false)}>
-            ×
-          </button>
-        </div>
-        <div className="messages-container">
-          {messages.length === 0 ? (
-            <p className="no-messages">No hay mensajes aún</p>
-          ) : (
-            messages.map((msg, index) => {
-              const user = participants.find((p) => p.userId === msg.userId);
-              const isCurrentUser = msg.userId === currentUserId;
-
-              return (
-                <div
-                  key={`${msg.userId}-${msg.timestamp}-${index}`}
-                  className={`message ${isCurrentUser ? "own-message" : ""}`}
-                >
-                  <div className="message-header">
-                    <span className="message-author">
-                      {isCurrentUser ? "Tú" : user?.name || "Usuario"}
-                    </span>
-                    <span className="message-time">
-                      {new Date(msg.timestamp).toLocaleTimeString("es-ES", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                  <span className="message-text">{msg.message}</span>
-                </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-        <div className="chat-input-container">
-          <input
-            type="text"
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Escribe un mensaje..."
-            className="chat-input"
-          />
-          <button onClick={handleSendMessage} className="send-btn">
-            Enviar
-          </button>
-        </div>
-      </div>
-
-      {/* Summary Modal */}
-      {showSummaryModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => {
-            setShowSummaryModal(false);
-            showingSummaryRef.current = false;
-            disconnectSocket();
-            navigate("/dashboard");
-          }}
-        >
-          <div
-            className="modal-content summary-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3>Resumen de la Reunión</h3>
-            <div className="summary-content">
-              <pre>{aiSummary}</pre>
-            </div>
-            <div className="modal-buttons">
-              <button
-                className="modal-btn confirm"
-                onClick={() => {
-                  setShowSummaryModal(false);
-                  disconnectSocket();
-                  navigate("/dashboard");
-                }}
-              >
-                Cerrar y volver al Dashboard
-              </button>
-              <button
-                className="modal-btn secondary"
-                onClick={() => {
-                  navigator.clipboard.writeText(aiSummary);
-                  setShowCopyToast(true);
-                  setTimeout(() => setShowCopyToast(false), 3000);
-                }}
-              >
-                Copiar resumen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Meeting Ended Modal (for non-hosts) */}
-      {showEndMeetingModal && (
-        <div className="modal-overlay end-meeting-overlay">
-          <div className="modal-content end-meeting-modal">
-            <div className="modal-icon">
-              <span>📞</span>
-            </div>
-            <h3>Reunión Finalizada</h3>
-            <p>El anfitrión ha finalizado esta reunión.</p>
-            <p className="subtext">
-              Serás redirigido al dashboard en un momento...
-            </p>
-            <div className="modal-buttons">
-              <button
-                className="modal-btn confirm"
-                onClick={() => {
-                  setShowEndMeetingModal(false);
-                  navigate("/dashboard");
-                }}
-              >
-                Ir al Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Participants Panel */}
-      <div className={`participants-panel ${isParticipantsOpen ? "open" : ""}`}>
-        <div className="panel-header">
-          <h3>Participantes ({participants.length})</h3>
-          <button
-            className="close-btn"
-            onClick={() => setIsParticipantsOpen(false)}
-          >
-            ×
-          </button>
-        </div>
-        <div className="participants-content">
-          <ul className="participants-list">
-            {participants.map((user) => (
-              <li key={user.socketId} className="participant-item">
-                {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt={user.name || "Usuario"}
-                    className="participant-avatar"
-                  />
-                ) : (
-                  <div className="participant-avatar-placeholder">
+          {/* Empty slots for participants without video yet */}
+          {participants
+            .filter(
+              (p) => p.userId !== currentUserId && !remoteStreams.has(p.userId),
+            )
+            .map((user) => (
+              <div key={user.userId} className="video-wrapper connecting">
+                <div className="camera-off-placeholder">
+                  <div className="avatar-placeholder">
                     {(user.name || user.email || "U").charAt(0).toUpperCase()}
                   </div>
-                )}
-                <div className="participant-info">
-                  <span className="participant-name">
-                    {user.name || "Usuario"}
-                    {user.userId === currentUserId && " (Tú)"}
-                    {user.userId === meetingCreatorId && " 👑"}
-                  </span>
-                  {user.email && (
-                    <span className="participant-email">{user.email}</span>
-                  )}
+                  <span>Conectando...</span>
                 </div>
-              </li>
+                <div className="video-label">
+                  <span>{user.name || user.email || "Usuario"}</span>
+                </div>
+              </div>
             ))}
-          </ul>
+        </div>
+
+        {/* Meeting ID Display */}
+        <div className="meeting-id-display">
+          <p>
+            ID: <strong>{meetingId}</strong>
+          </p>
+          <button onClick={copyMeetingId} className="copy-btn">
+            Copiar
+          </button>
+        </div>
+
+        {error && <p className="error-message" role="alert" aria-live="assertive">{error}</p>}
+
+        {/* Toast Notifications */}
+        {showToast && (
+          <div className="toast-notification">
+            <div className="toast-content">
+              <span className="toast-icon">✓</span>
+              <span className="toast-text">ID copiado al portapapeles</span>
+            </div>
+          </div>
+        )}
+
+        {showCopyToast && (
+          <div className="toast-notification copy-toast">
+            <div className="toast-content">
+              <span className="toast-text">Resumen copiado al portapapeles</span>
+            </div>
+          </div>
+        )}
+
+        {/* End Meeting Confirmation Modal */}
+        {showEndMeetingConfirm && (
+          <div
+            className="modal-overlay"
+            onClick={() => setShowEndMeetingConfirm(false)}
+          >
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>¿Finalizar reunión para todos?</h3>
+              <p>Esta acción cerrará la reunión para todos los participantes.</p>
+              <div className="modal-buttons">
+                <button
+                  className="modal-btn cancel"
+                  onClick={() => setShowEndMeetingConfirm(false)}
+                >
+                  Cancelar
+                </button>
+                <button className="modal-btn confirm" onClick={handleEndMeeting}>
+                  Finalizar para todos
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Controls */}
+        <div className="bottom-controls">
+          <button
+            className={`control-btn ${!isMicOn ? "disabled" : ""}`}
+            onClick={handleToggleMic}
+            title={isMicOn ? "Silenciar micrófono" : "Activar micrófono"}
+            disabled={!isAudioReady}
+            tabIndex={0}
+            role="button"
+            aria-label={isMicOn ? "Silenciar micrófono" : "Activar micrófono"}
+          >
+            <img src={micro} alt="Micrófono" />
+            {!isMicOn && <div className="control-slash" />}
+          </button>
+
+          <button
+            className={`control-btn ${!isCameraOn ? "disabled" : ""}`}
+            onClick={handleToggleCamera}
+            title={isCameraOn ? "Desactivar cámara" : "Activar cámara"}
+            disabled={!isVideoReady}
+            tabIndex={0}
+            role="button"
+            aria-label={isCameraOn ? "Desactivar cámara" : "Activar cámara"}
+          >
+            <img src={camera} alt="Cámara" />
+            {!isCameraOn && <div className="control-slash" />}
+          </button>
+
+          <button
+            className="control-btn leave-call"
+            onClick={handleLeaveCall}
+            title="Salir de la llamada"
+            tabIndex={0}
+            role="button"
+            aria-label="Salir de la llamada"
+          >
+            <img src={end_call} alt="Salir" />
+          </button>
+
+          {isCreator && (
+            <button
+              className="end-meeting-btn"
+              onClick={() => setShowEndMeetingConfirm(true)}
+              title="Finalizar reunión para todos"
+              tabIndex={0}
+              role="button"
+              aria-label="Finalizar reunión para todos"
+            >
+              <span className="end-text">Finalizar Reunión</span>
+            </button>
+          )}
+        </div>
+
+        {/* Side Controls */}
+        <div className="side-controls">
+          <button
+            className="side-btn"
+            onClick={toggleParticipants}
+            title="Participantes"
+            tabIndex={0}
+            role="button"
+            aria-label="Mostrar participantes"
+          >
+            <img src={participants_logo} alt="Participantes" />
+            {participants.length > 0 && (
+              <span className="badge">{participants.length}</span>
+            )}
+          </button>
+
+          <button className="side-btn" onClick={toggleChat} title="Chat" tabIndex={0} role="button" aria-label="Abrir chat">
+            <img src={chatIcon} alt="Chat" />
+          </button>
+        </div>
+
+        {/* Chat Panel */}
+        <div className={`chat-panel ${isChatOpen ? "open" : ""}`}>
+          <div className="panel-header">
+            <h3>Chat</h3>
+            <button className="close-btn" onClick={() => setIsChatOpen(false)} tabIndex={0} role="button" aria-label="Cerrar chat">
+              ×
+            </button>
+          </div>
+          <div className="messages-container">
+            {messages.length === 0 ? (
+              <p className="no-messages">No hay mensajes aún</p>
+            ) : (
+              messages.map((msg, index) => {
+                const user = participants.find((p) => p.userId === msg.userId);
+                const isCurrentUser = msg.userId === currentUserId;
+
+                return (
+                  <div
+                    key={`${msg.userId}-${msg.timestamp}-${index}`}
+                    className={`message ${isCurrentUser ? "own-message" : ""}`}
+                  >
+                    <div className="message-header">
+                      <span className="message-author">
+                        {isCurrentUser ? "Tú" : user?.name || "Usuario"}
+                      </span>
+                      <span className="message-time">
+                        {new Date(msg.timestamp).toLocaleTimeString("es-ES", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <span className="message-text">{msg.message}</span>
+                  </div>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className="chat-input-container">
+            <input
+              type="text"
+              value={messageInput}
+              onChange={(e) => setMessageInput(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              placeholder="Escribe un mensaje..."
+              className="chat-input"
+              tabIndex={0}
+              role="textbox"
+              aria-label="Escribir mensaje"
+            />
+            <button onClick={handleSendMessage} className="send-btn" tabIndex={0} role="button" aria-label="Enviar mensaje">
+              Enviar
+            </button>
+          </div>
+        </div>
+
+        {/* Summary Modal */}
+        {showSummaryModal && (
+          <div
+            className="modal-overlay"
+            onClick={() => {
+              setShowSummaryModal(false);
+              showingSummaryRef.current = false;
+              disconnectSocket();
+              navigate("/dashboard");
+            }}
+          >
+            <div
+              className="modal-content summary-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Resumen de la Reunión</h3>
+              <div className="summary-content">
+                <pre>{aiSummary}</pre>
+              </div>
+              <div className="modal-buttons">
+                <button
+                  className="modal-btn confirm"
+                  onClick={() => {
+                    setShowSummaryModal(false);
+                    disconnectSocket();
+                    navigate("/dashboard");
+                  }}
+                >
+                  Cerrar y volver al Dashboard
+                </button>
+                <button
+                  className="modal-btn secondary"
+                  onClick={() => {
+                    navigator.clipboard.writeText(aiSummary);
+                    setShowCopyToast(true);
+                    setTimeout(() => setShowCopyToast(false), 3000);
+                  }}
+                >
+                  Copiar resumen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Meeting Ended Modal (for non-hosts) */}
+        {showEndMeetingModal && (
+          <div className="modal-overlay end-meeting-overlay">
+            <div className="modal-content end-meeting-modal">
+              <div className="modal-icon">
+                <span>📞</span>
+              </div>
+              <h3>Reunión Finalizada</h3>
+              <p>El anfitrión ha finalizado esta reunión.</p>
+              <p className="subtext">
+                Serás redirigido al dashboard en un momento...
+              </p>
+              <div className="modal-buttons">
+                <button
+                  className="modal-btn confirm"
+                  onClick={() => {
+                    setShowEndMeetingModal(false);
+                    navigate("/dashboard");
+                  }}
+                >
+                  Ir al Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Participants Panel */}
+        <div className={`participants-panel ${isParticipantsOpen ? "open" : ""}`}>
+          <div className="panel-header">
+            <h3>Participantes ({participants.length})</h3>
+            <button
+              className="close-btn"
+              onClick={() => setIsParticipantsOpen(false)}
+              tabIndex={0}
+              role="button"
+              aria-label="Cerrar panel de participantes"
+            >
+              ×
+            </button>
+          </div>
+          <div className="participants-content">
+            <ul className="participants-list">
+              {participants.map((user) => (
+                <li key={user.socketId} className="participant-item">
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.name || "Usuario"}
+                      className="participant-avatar"
+                    />
+                  ) : (
+                    <div className="participant-avatar-placeholder">
+                      {(user.name || user.email || "U").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="participant-info">
+                    <span className="participant-name">
+                      {user.name || "Usuario"}
+                      {user.userId === currentUserId && " (Tú)"}
+                      {user.userId === meetingCreatorId && " 👑"}
+                    </span>
+                    {user.email && (
+                      <span className="participant-email">{user.email}</span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
